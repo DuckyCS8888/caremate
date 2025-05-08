@@ -1,29 +1,94 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:projects/home.dart';
+import 'package:projects/home.dart';  // Community page
+import 'package:projects/volunteer_request.dart';  // Calendar page
+import 'package:projects/screen/welcome_screen.dart';  // First Aid page
+import 'package:projects/help_request.dart';  // Help Request page
+import 'package:projects/request_detail.dart';  // Profile page
 import 'CalendarScreenState.dart';
+import 'community.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:projects/screen/welcome_screen.dart';
+
+import 'first_aid.dart';
+import 'ngo_page.dart';
 
 void main() async {
-//TODO - Insert initialisation of Firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp( const MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
-      home:  CommunityScreen(),
+      debugShowCheckedModeBanner: false,
+      home: NGOPage(),  // Directly start with MainPage
     );
   }
 }
+
+class MainPage extends StatefulWidget {
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  int _selectedIndex = 0;  // Track selected navigation item
+
+  // Define the list of pages to navigate to
+  static List<Widget> _pages = <Widget>[
+    CommunityPage(),        // Community page
+    CalendarScreen(),       // Calendar page
+    FirstAidPage(),         // First Aid page
+    HelpRequestPage(),      // Help Request page
+    WelcomeScreen(),          // Profile page
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;  // Update the selected page
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_selectedIndex],  // Display selected page
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Community',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.medical_services),
+            label: 'First Aid',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.help),
+            label: 'Help Request',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.red,  // Change the color for selected item
+        unselectedItemColor: Colors.grey,  // Set color for unselected items
+        onTap: _onItemTapped,  // Handle item taps
+      ),
+    );
+  }
+}
+

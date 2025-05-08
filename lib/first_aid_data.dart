@@ -1,0 +1,86 @@
+// first_aid_data.dart
+
+final Map<String, List<String>> firstAidSteps = {
+  'Skin Burn': [
+    'Step 1: Stop the burn from getting worse by removing yourself or the person from the source of heat.',
+    'Step 2: Run cool (not cold) water over the burn for 10 to 20 minutes.',
+    'Step 3: Cover the burn with a clean, non-stick bandage or cloth.',
+    'Step 4: Avoid applying ice or ointments to the burn.',
+    'Step 5: Seek medical help if necessary, especially for severe burns.',
+  ],
+  'Heat Stroke': [
+    'Step 1: Move to a cooler place.',
+    'Step 2: Lie down and elevate the feet slightly.',
+    'Step 3: Cool the body by spraying cool water or using a fan.',
+    'Step 4: Drink cool fluids if the person is conscious.',
+    'Step 5: Call for emergency help immediately.',
+  ],
+  'Bleeding': [
+    'Step 1: Apply direct pressure to the wound using a clean cloth.',
+    'Step 2: Elevate the injured area above the heart if possible.',
+    'Step 3: Apply more pressure if the bleeding doesn’t stop.',
+    'Step 4: Cover the wound with a sterile dressing.',
+    'Step 5: Seek medical help if the bleeding is severe.',
+  ],
+  'Poisoning': [
+    'Step 1: Identify the poison if possible (e.g., bottle label).',
+    'Step 2: Call emergency services immediately.',
+    'Step 3: If the person is conscious, give water to dilute the poison.',
+    'Step 4: Do not induce vomiting unless instructed by a professional.',
+    'Step 5: Follow medical advice closely.',
+  ],
+  'Heart Attack': [
+    'Step 1: Call emergency services immediately.',
+    'Step 2: Help the person sit down and rest.',
+    'Step 3: If the person is conscious, give aspirin to chew.',
+    'Step 4: Perform CPR if necessary and trained.',
+    'Step 5: Continue monitoring until help arrives.',
+  ],
+  'Choking': [
+    'Step 1: Ask the person to cough if they can.',
+    'Step 2: Perform Heimlich maneuver if the person cannot cough.',
+    'Step 3: If the person loses consciousness, begin CPR.',
+    'Step 4: Seek medical help immediately.',
+  ],
+  'Sprains': [
+    'Step 1: Rest the injured area and avoid using it.',
+    'Step 2: Apply ice to reduce swelling.',
+    'Step 3: Compress the area with a bandage.',
+    'Step 4: Elevate the injured area above the heart.',
+    'Step 5: Seek medical help if pain persists.',
+  ],
+  'Fractures': [
+    'Step 1: Immobilize the injured area using a splint.',
+    'Step 2: Apply ice to reduce swelling.',
+    'Step 3: Keep the person calm and avoid moving them.',
+    'Step 4: Seek medical help immediately.',
+  ],
+  'Drowning': [
+    'Step 1: Call for emergency help immediately.',
+    'Step 2: Remove the person from the water if it is safe to do so.',
+    'Step 3: Perform CPR if necessary and trained.',
+    'Step 4: Monitor the person for signs of breathing.',
+    'Step 5: Seek immediate medical attention.',
+  ],
+  'Allergic': [
+    'Step 1: Call emergency services immediately.',
+    'Step 2: If the person has an epinephrine auto-injector (EpiPen), assist them in using it.',
+    'Step 3: Keep the person lying down with their legs elevated.',
+    'Step 4: Monitor for any signs of breathing difficulty or loss of consciousness.',
+    'Step 5: Administer a second dose of epinephrine if symptoms do not improve and medical help is delayed.',
+  ],
+  'Hypothermia': [
+    'Step 1: Move the person to a warmer environment, if possible.',
+    'Step 2: Remove any wet clothing and wrap the person in warm, dry blankets.',
+    'Step 3: Give warm (not hot) fluids if the person is conscious.',
+    'Step 4: Gradually warm the person\'s body, focusing on the chest, neck, and head.',
+    'Step 5: Seek immediate medical help, especially if the person loses consciousness.',
+  ],
+  'Severe Nosebleed': [
+    'Step 1: Have the person sit upright and lean slightly forward to prevent blood from flowing back into the throat.',
+    'Step 2: Pinch the nostrils together and apply pressure for 10-15 minutes.',
+    'Step 3: Apply a cold compress to the back of the neck or the nose.',
+    'Step 4: Avoid letting the person lean back or blow their nose.',
+    'Step 5: Seek medical help if the bleeding doesn’t stop or if it is due to a serious injury.',
+  ],
+};
