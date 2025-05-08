@@ -15,6 +15,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class CalenderScreen extends StatelessWidget {
+  const CalenderScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
 class CalendarScreen extends StatefulWidget {
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
