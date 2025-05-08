@@ -6,7 +6,7 @@ class FirstAidDetailPage extends StatelessWidget {
   final String name;
   final String imagePath;
 
-  // Constructor to receive the first aid item's name and image path
+  // Constructor to receive the first aid item's name and images path
   const FirstAidDetailPage({super.key, required this.name, required this.imagePath});
 
   @override

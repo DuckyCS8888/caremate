@@ -10,20 +10,20 @@ class _FirstAidItem {
   _FirstAidItem(this.name, this.imagePath);
 }
 
-// List of first aid items with image
+// List of first aid items with images
 final List<_FirstAidItem> items = [
-  _FirstAidItem('Skin Burn', 'assets/image/skin_burn.png'),
-  _FirstAidItem('Heat Stroke', 'assets/image/heat_stroke.png'),
-  _FirstAidItem('Bleeding', 'assets/image/bleeding.png'),
-  _FirstAidItem('Poisoning', 'assets/image/poisoning.png'),
-  _FirstAidItem('Heart Attack', 'assets/image/heart_attack.png'),
-  _FirstAidItem('Choking', 'assets/image/choking.png'),
-  _FirstAidItem('Sprains', 'assets/image/sprains.png'),
-  _FirstAidItem('Fractures', 'assets/image/fractures.png'),
-  _FirstAidItem('Drowning', 'assets/image/drowning.png'),
-  _FirstAidItem('Allergic', 'assets/image/allergic.png'), // Add image
-  _FirstAidItem('Hypothermia', 'assets/image/hypothermia.png'), // Add image
-  _FirstAidItem('Severe Nosebleed', 'assets/image/nosebleed.png'), // Add image
+  _FirstAidItem('Skin Burn', 'assets/images/skin_burn.png'),
+  _FirstAidItem('Heat Stroke', 'assets/images/heat_stroke.png'),
+  _FirstAidItem('Bleeding', 'assets/images/bleeding.png'),
+  _FirstAidItem('Poisoning', 'assets/images/poisoning.png'),
+  _FirstAidItem('Heart Attack', 'assets/images/heart_attack.png'),
+  _FirstAidItem('Choking', 'assets/images/choking.png'),
+  _FirstAidItem('Sprains', 'assets/images/sprains.png'),
+  _FirstAidItem('Fractures', 'assets/images/fractures.png'),
+  _FirstAidItem('Drowning', 'assets/images/drowning.png'),
+  _FirstAidItem('Allergic', 'assets/images/allergic.png'), // Add image
+  _FirstAidItem('Hypothermia', 'assets/images/hypothermia.png'), // Add image
+  _FirstAidItem('Severe Nosebleed', 'assets/images/nosebleed.png'), // Add image
 ];
 
 
