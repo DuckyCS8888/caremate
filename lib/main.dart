@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: NGOPage(),  // Directly start with MainPage
+      home: CalendarScreen(),  // Directly start with MainPage
     );
   }
 }

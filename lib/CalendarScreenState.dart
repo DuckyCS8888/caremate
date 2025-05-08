@@ -20,9 +20,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     "3am", "4am", "5am"
   ];
 
-  Map<DateTime, String> dayNotes = {}; // Store notes for each day
-  Map<DateTime, TimeOfDay> reminderTimes = {}; // Store reminder times for each day
-  String _reminderMessage = ''; // To store and display the reminder message
+  Map<DateTime, List<String>> dayNotes = {};
+  Map<DateTime, List<TimeOfDay>> reminderTimes = {};
+  String? _reminderMessage = '';
+  String? _selectedReminderTime;
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +70,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Icon(Icons.add, size: 30, color: Colors.white),
             ),
           ),
-          // Show the reminder message below the content
-          if (_reminderMessage.isNotEmpty)
+          if (_reminderMessage != null && _reminderMessage!.isNotEmpty)
             Positioned(
-              bottom: 100, // Adjust the position of the message
+              bottom: 100,
               left: 0,
               right: 0,
               child: Container(
@@ -80,7 +80,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 padding: EdgeInsets.all(8),
                 color: Colors.blueAccent,
                 child: Text(
-                  _reminderMessage,
+                  _reminderMessage!,
                   style: TextStyle(color: Colors.white),
                 ),
               ),
@@ -117,6 +117,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
             _selectedDay = selectedDay;
             _focusedDay = focusedDay;
           });
+
+          if (dayNotes.containsKey(selectedDay) && reminderTimes.containsKey(selectedDay)) {
+            final List<String> notes = dayNotes[selectedDay]!;
+            final List<TimeOfDay> times = reminderTimes[selectedDay]!;
+
+            final Set<String> entries = {};
+            for (int i = 0; i < notes.length; i++) {
+              String formattedDate = "${selectedDay.day} ${_monthName(selectedDay.month)}";
+              String entry = "$formattedDate: ${notes[i]} at ${times[i].format(context)}";
+              entries.add(entry);
+            }
+
+            setState(() {
+              _reminderMessage = entries.join('\n');
+            });
+          } else {
+            setState(() {
+              _reminderMessage = '';
+            });
+          }
         },
         calendarFormat: _calendarFormat,
         onFormatChanged: (format) {
@@ -128,6 +148,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         calendarStyle: CalendarStyle(
           todayDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
           selectedDecoration: BoxDecoration(color: Colors.deepOrange, shape: BoxShape.circle),
+        ),
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, date, events) {
+            if (dayNotes.containsKey(date) && reminderTimes.containsKey(date)) {
+              return Positioned(
+                bottom: 5,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            }
+            return SizedBox.shrink();
+          },
         ),
       ),
     );
@@ -153,12 +191,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
               SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
-                  // Pick reminder time
                   _reminderTime = await _selectTime(context);
                   if (_reminderTime != null) {
-                    // Save reminder time
                     setState(() {
-                      reminderTimes[_selectedDay!] = _reminderTime!;
+                      _selectedReminderTime = _reminderTime!.format(context);
+                      if (!dayNotes.containsKey(_selectedDay)) {
+                        dayNotes[_selectedDay!] = [];
+                        reminderTimes[_selectedDay!] = [];
+                      }
+                      dayNotes[_selectedDay!]!.add(_noteController.text);
+                      reminderTimes[_selectedDay!]!.add(_reminderTime!);
                     });
                   }
                 },
@@ -168,27 +210,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                // Save note and reminder message
+                if (_selectedDay == null || _noteController.text.isEmpty || _selectedReminderTime == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("Please fill in the note and set the reminder time!"),
+                  ));
+                  return;
+                }
                 setState(() {
-                  dayNotes[_selectedDay!] = _noteController.text; // Save note for the selected day
-                  _reminderMessage = "Reminder set for '${_noteController.text}' at ${_reminderTime?.format(context)}"; // Set reminder message
+                  dayNotes[_selectedDay!] = dayNotes[_selectedDay!] ?? [];
+                  dayNotes[_selectedDay!]!.add(_noteController.text);
+                  reminderTimes[_selectedDay!] = reminderTimes[_selectedDay!] ?? [];
+                  reminderTimes[_selectedDay!]!.add(_reminderTime!);
+                  _reminderMessage = "Reminder set for '${_noteController.text}' at ${_selectedReminderTime}";
                 });
-
-                // Show the reminder message for 3 seconds
                 Future.delayed(Duration(seconds: 3), () {
                   setState(() {
-                    _reminderMessage = ''; // Clear the reminder message after 3 seconds
+                    _reminderMessage = '';
                   });
                 });
-
-                // Dismiss the dialog after saving
                 Navigator.pop(context);
               },
               child: Text('Save'),
@@ -220,10 +264,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       child: Column(
         children: [
           const SizedBox(height: 16),
-          Text(
-            'Week View',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          Text('Week View', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Row(
             children: daysOfWeek.map((day) {
@@ -251,11 +292,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget buildDayView() {
     DateTime displayDay = _focusedDay;
     String weekday = weekDays[displayDay.weekday % 7];
-    List<String> monthsNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    String month = monthsNames[_focusedDay.month - 1];
+    String month = _monthName(_focusedDay.month);
 
     return Column(
       children: [
@@ -319,5 +356,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ],
     );
+  }
+
+  String _monthName(int month) {
+    const List<String> months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
   }
 }
