@@ -66,7 +66,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/image/
+    - assets/image/caremate.png
     - assets/icon/
 
   # To add assets to your application, add an assets section, like this:
