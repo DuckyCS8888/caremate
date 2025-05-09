@@ -21,11 +21,10 @@ final List<_FirstAidItem> items = [
   _FirstAidItem('Sprains', 'assets/images/sprains.png'),
   _FirstAidItem('Fractures', 'assets/images/fractures.png'),
   _FirstAidItem('Drowning', 'assets/images/drowning.png'),
-  _FirstAidItem('Allergic', 'assets/images/allergic.png'), // Add image
-  _FirstAidItem('Hypothermia', 'assets/images/hypothermia.png'), // Add image
-  _FirstAidItem('Severe Nosebleed', 'assets/images/nosebleed.png'), // Add image
+  _FirstAidItem('Allergic', 'assets/images/allergic.png'),
+  _FirstAidItem('Hypothermia', 'assets/images/hypothermia.png'),
+  _FirstAidItem('Severe Nosebleed', 'assets/images/nosebleed.png'),
 ];
-
 
 class FirstAidPage extends StatelessWidget {
   const FirstAidPage({super.key});
@@ -45,105 +44,115 @@ class FirstAidPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Essential First Aid'),
-        backgroundColor: Colors.orange, // Set the background color to orange
+        backgroundColor: Colors.orange,
+        elevation: 0, // Remove AppBar shadow for a cleaner look
       ),
-      body: Column(
-        children: [
-          // Grid view of first aid items
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10.0,
-                mainAxisSpacing: 10.0,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FirstAidDetailPage(
-                          name: item.name,
-                          imagePath: item.imagePath,
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            // Grid view of first aid items
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FirstAidDetailPage(
+                            name: item.name,
+                            imagePath: item.imagePath,
+                          ),
                         ),
+                      );
+                    },
+                    child: Card(
+                      elevation: 5.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                    );
-                  },
-                  child: Card(
-                    elevation: 5.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.3),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            item.imagePath,
-                            width: 70.0,
-                            height: 70.0,
-                          ),
-                        ),
-                        const SizedBox(height: 10.0),
-                        Text(
-                          item.name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          // SOS Button
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: _openDialer,
-              child: Container(
-                width: 110.0,
-                height: 110.0,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4.0),
-                ),
-                child: Center(
-                  child: Text(
-                    'SOS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10.0),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[50],
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Image.asset(
+                              item.imagePath,
+                              width: 60.0,
+                              height: 60.0,
+                            ),
+                          ),
+                          const SizedBox(height: 10.0),
+                          Text(
+                            item.name,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14.0,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // SOS Button
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: GestureDetector(
+                onTap: _openDialer,
+                child: Container(
+                  width: 120.0,
+                  height: 120.0,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.red, Colors.redAccent],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4.0),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'SOS',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
