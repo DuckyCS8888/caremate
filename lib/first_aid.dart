@@ -127,8 +127,8 @@ class FirstAidPage extends StatelessWidget {
               child: GestureDetector(
                 onTap: _openDialer,
                 child: Container(
-                  width: 120.0,
-                  height: 120.0,
+                  width: 100.0,
+                  height: 100.0,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Colors.red, Colors.redAccent],

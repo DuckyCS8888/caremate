@@ -26,6 +26,7 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
     _getLocation();
   }
 
+  // Fetch current location using Geolocator and handle permission
   Future<void> _getLocation() async {
     var status = await Permission.location.request();
     if (status.isGranted) {
@@ -42,9 +43,9 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
     }
   }
 
+  // Submit the help request to Firestore
   Future<void> _submitRequest() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Get current user's ID (assuming FirebaseAuth is used)
       User? currentUser = FirebaseAuth.instance.currentUser;
       String userId = currentUser?.uid ?? ""; // Default to empty string if not logged in
 
@@ -52,28 +53,31 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
         // Reference to the user's document in the 'users' collection
         final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
 
-        // Add the request to the 'requests' subcollection under the user
-        await userRef.collection('requests').add({
-          'title': _titleController.text,
-          'description': _descriptionController.text,
-          'category': _selectedCategory,
-          'urgency': _selectedUrgency,
-          'latitude': _latitude,
-          'longitude': _longitude,
-          'location': _locationController.text,
-          'createdAt': FieldValue.serverTimestamp(),
-          'volunteerName': '',  // Initially empty until a volunteer accepts the request
-          'volunteerContact': '',  // Initially empty
-          'volunteerAccepted': false,  // Initially false
-        });
+        try {
+          // Add the help request to the 'requests' subcollection under the user
+          await userRef.collection('requests').add({
+            'title': _titleController.text.trim(),
+            'description': _descriptionController.text.trim(),
+            'category': _selectedCategory,
+            'urgency': _selectedUrgency,
+            'latitude': _latitude,
+            'longitude': _longitude,
+            'location': _locationController.text.trim(),
+            'createdAt': FieldValue.serverTimestamp(),
+            'volunteerName': '',  // Initially empty until a volunteer accepts the request
+            'volunteerContact': '',  // Initially empty
+            'volunteerAccepted': false,  // Initially false
+          });
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
+        }
       } else {
         print("User not logged in");
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +209,7 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                 child: Text('Submit Request'),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14), backgroundColor: Colors.orangeAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), // Button color
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   textStyle: TextStyle(fontSize: 18),
                 ),
               ),
