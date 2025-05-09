@@ -3,7 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:projects/home.dart';
 import 'dart:typed_data';
+
+import 'package:projects/home.dart';
+import 'package:projects/main.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -79,7 +83,9 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
         );
 
         // Navigate to main UI (replace with your main screen route)
-        Navigator.pushReplacementNamed(context, '/mainUI');
+        Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => CommunityScreen()),
+        );
       } catch (e) {
         // Show specific error message for troubleshooting
         ScaffoldMessenger.of(context).showSnackBar(

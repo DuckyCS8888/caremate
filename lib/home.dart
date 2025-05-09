@@ -14,46 +14,14 @@ class CommunityScreen extends StatelessWidget {
   }
 }
 
-class UserWidget extends StatefulWidget {
-  const UserWidget({super.key});
-  @override
-  State<UserWidget> createState() => _UserWidgetState();
-}
-
-class _UserWidgetState extends State<UserWidget> {
-  User? _user;
-  late FirebaseFirestore _firestoreInstance;
-  @override
-  void initState() {
-    super.initState();
-    //TODO - Get the current user
-    _firestoreInstance = FirebaseFirestore.instance;
-    var user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _user = user;
-      FirebaseFirestore _firestore = FirebaseFirestore.instance;
-      _firestore.collection('users').doc(user.uid).set({
-        'username': '',
-        'email': '',
-        'dob': '',
-        'contact': '',
-        'profilePic': '',
-      });
-    }
-
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         children: [
-          _user == null || _user!.displayName == null
-              ? Text('Welcome!')
-              : Text('Welcome, ${_user!.displayName} !'),
+          Text('Welcome!'),
         ],
       ),
     );
   }
-}
