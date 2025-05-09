@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projects/screen/login.dart';
 import 'package:projects/screen/signup.dart';
-import '../home.dart'; // Make sure you have the correct import for CommunityScreen
 import 'package:google_fonts/google_fonts.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -59,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => LoginPage(),
+                        builder: (context) => LoginPage()
                       ),
                     );
                   },

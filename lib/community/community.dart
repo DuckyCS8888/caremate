@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:projects/community/createPost.dart';
 
 class CommunityForum extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("CareMate Home")),
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text("Community Forum")),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -44,6 +47,18 @@ class CommunityForum extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      // FloatingActionButton for "Add Post"
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to the Add Post page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreatePostPage()),
+          );
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Colors.red,
       ),
     );
   }

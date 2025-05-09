@@ -43,6 +43,7 @@ class FirstAidPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Essential First Aid'),
         backgroundColor: Colors.orange,
         elevation: 0, // Remove AppBar shadow for a cleaner look

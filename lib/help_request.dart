@@ -79,6 +79,7 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text('Submit a Help Request'),
         backgroundColor: Colors.orange,
       ),

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:projects/home.dart'; // Import your CommunityScreen here
-import 'package:projects/profile_setup.dart'; // Import ProfileSetup page
+import 'package:projects/home.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -48,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
 
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => ProfileSetupPage()),
+            MaterialPageRoute(builder: (context) => MainPage()),
           );
         }
       } on FirebaseAuthException catch (e) {
@@ -78,6 +77,21 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Container(
+                  width: 250,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(
+                        'assets/images/caremate.png',
+                      ), // Replace with your logo path
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  height: 20,
+                ), // Space between the logo and the welcome text
                 // Email TextField
                 TextFormField(
                   controller: _emailController,
