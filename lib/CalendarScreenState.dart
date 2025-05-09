@@ -20,16 +20,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     "3am", "4am", "5am"
   ];
 
-  Map<DateTime, List<String>> dayNotes = {};
-  Map<DateTime, List<TimeOfDay>> reminderTimes = {};
-  String? _reminderMessage = '';
+  Map<DateTime, List<String>> dayNotes = {}; // Stores notes for each day
+  Map<DateTime, List<TimeOfDay>> reminderTimes = {}; // Stores reminder times for each day
+  String? _reminderMessage = ''; // Reminder message for month view
   String? _selectedReminderTime;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: Row(
@@ -46,6 +45,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onSelected: (value) {
                 setState(() {
                   _currentView = value;
+                  if (_currentView != 'Month') {
+                    _reminderMessage = '';
+                  }
                 });
               },
               itemBuilder: (context) => [
@@ -71,7 +73,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Icon(Icons.add, size: 30, color: Colors.white),
             ),
           ),
-          if (_reminderMessage != null && _reminderMessage!.isNotEmpty)
+          if (_reminderMessage != null && _reminderMessage!.isNotEmpty && _currentView == 'Month')
             Positioned(
               bottom: 100,
               left: 0,
@@ -79,10 +81,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.all(8),
-                color: Colors.blueAccent,
+                // Improved design: Clean message display
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
                 child: Text(
                   _reminderMessage!,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.black, fontSize: 14), // Clean text styling
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -172,85 +180,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Future<void> _showAddNoteDialog(BuildContext context) async {
-    TextEditingController _noteController = TextEditingController();
-    TimeOfDay? _reminderTime;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add Note and Set Reminder'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _noteController,
-                decoration: InputDecoration(hintText: 'Write your note here'),
-                maxLines: 5,
-              ),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () async {
-                  _reminderTime = await _selectTime(context);
-                  if (_reminderTime != null) {
-                    setState(() {
-                      _selectedReminderTime = _reminderTime!.format(context);
-                      if (!dayNotes.containsKey(_selectedDay)) {
-                        dayNotes[_selectedDay!] = [];
-                        reminderTimes[_selectedDay!] = [];
-                      }
-                      dayNotes[_selectedDay!]!.add(_noteController.text);
-                      reminderTimes[_selectedDay!]!.add(_reminderTime!);
-                    });
-                  }
-                },
-                child: Text('Set Reminder'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (_selectedDay == null || _noteController.text.isEmpty || _selectedReminderTime == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Please fill in the note and set the reminder time!"),
-                  ));
-                  return;
-                }
-                setState(() {
-                  dayNotes[_selectedDay!] = dayNotes[_selectedDay!] ?? [];
-                  dayNotes[_selectedDay!]!.add(_noteController.text);
-                  reminderTimes[_selectedDay!] = reminderTimes[_selectedDay!] ?? [];
-                  reminderTimes[_selectedDay!]!.add(_reminderTime!);
-                  _reminderMessage = "Reminder set for '${_noteController.text}' at ${_selectedReminderTime}";
-                });
-                Future.delayed(Duration(seconds: 3), () {
-                  setState(() {
-                    _reminderMessage = '';
-                  });
-                });
-                Navigator.pop(context);
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<TimeOfDay?> _selectTime(BuildContext context) async {
-    return showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-  }
-
   Widget buildWeekView() {
     DateTime startOfWeek = _selectedDay ?? _focusedDay;
     int dayOfWeek = startOfWeek.weekday;
@@ -268,19 +197,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Text('Week View', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: daysOfWeek.map((day) {
+              List<String> notes = dayNotes[day] ?? [];
+              List<TimeOfDay> times = reminderTimes[day] ?? [];
+
+              Set<String> uniqueEntries = {};
+              for (int i = 0; i < notes.length; i++) {
+                String formattedDate = "${day.day} ${_monthName(day.month)}";
+                String entry = "$formattedDate: ${notes[i]} at ${times[i].format(context)}";
+                uniqueEntries.add(entry);
+              }
+
               return Expanded(
-                child: Center(
-                  child: Column(
-                    children: [
-                      Text('${day.day}', style: TextStyle(fontWeight: FontWeight.bold)),
-                      SizedBox(height: 4),
-                      IconButton(
-                        icon: Icon(Icons.add, size: 20, color: Colors.blue),
-                        onPressed: () => _showAddNoteDialog(context),
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  children: [
+                    Text('${day.day}', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    ...uniqueEntries.map((entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Text(entry, style: TextStyle(fontSize: 12, color: Colors.blue)),
+                    )),
+                    IconButton(
+                      icon: Icon(Icons.add, size: 20, color: Colors.blue),
+                      onPressed: () {
+                        setState(() {
+                          _selectedDay = day;
+                        });
+                        _showAddNoteDialog(context);
+                      },
+                    ),
+                  ],
                 ),
               );
             }).toList(),
@@ -294,6 +241,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
     DateTime displayDay = _focusedDay;
     String weekday = weekDays[displayDay.weekday % 7];
     String month = _monthName(_focusedDay.month);
+
+    List<String> notes = dayNotes[displayDay] ?? [];
+    List<TimeOfDay> times = reminderTimes[displayDay] ?? [];
+
+    // Sorting notes and times based on the reminder time (earliest to latest)
+    List<MapEntry<TimeOfDay, String>> sortedNotes = [];
+    for (int i = 0; i < notes.length; i++) {
+      sortedNotes.add(MapEntry(times[i], notes[i]));
+    }
+
+    sortedNotes.sort((a, b) => a.key.compareTo(b.key));
 
     return Column(
       children: [
@@ -332,23 +290,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
         const Divider(),
         Expanded(
           child: ListView.builder(
-            itemCount: timeSlots.length,
+            itemCount: sortedNotes.length,
             itemBuilder: (context, index) {
+              String timeText = sortedNotes[index].key.format(context);
+              String noteAtThisTime = sortedNotes[index].value;
+
               return Container(
-                height: 60,
+                padding: EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade300, width: 1.0),
-                  ),
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1.0)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      timeSlots[index],
-                      style: TextStyle(fontSize: 14),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("[$timeText]   [$noteAtThisTime]", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            dayNotes[displayDay]?.removeAt(index);
+                            reminderTimes[displayDay]?.removeAt(index);
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -356,6 +323,62 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showAddNoteDialog(BuildContext context) async {
+    TextEditingController _noteController = TextEditingController();
+    TimeOfDay? _reminderTime;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Note and Set Reminder'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _noteController,
+                decoration: InputDecoration(hintText: 'Write your note here'),
+                maxLines: 5,
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  _reminderTime = await _selectTime(context);
+                  if (_reminderTime != null) {
+                    setState(() {
+                      _selectedReminderTime = _reminderTime!.format(context);
+                      if (!dayNotes.containsKey(_selectedDay)) {
+                        dayNotes[_selectedDay!] = [];
+                        reminderTimes[_selectedDay!] = [];
+                      }
+                      dayNotes[_selectedDay!]!.add(_noteController.text);
+                      reminderTimes[_selectedDay!]!.add(_reminderTime!);
+                    });
+                    Navigator.pop(context); // Close the dialog
+                  }
+                },
+                child: Text('Set Reminder'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<TimeOfDay?> _selectTime(BuildContext context) async {
+    return showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
     );
   }
 
