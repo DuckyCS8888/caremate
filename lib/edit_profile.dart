@@ -6,6 +6,7 @@ class EditProfilePage extends StatefulWidget {
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 }
+//Test
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
@@ -21,7 +22,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isConfirmPasswordVisible = false;
 
   File? _profileImage;  // Variable to store the profile picture
-
   final ImagePicker _picker = ImagePicker();
 
   // Function to pick the image

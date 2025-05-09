@@ -27,7 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
     {"name": "alice_williams", "username": "AliceW"},
     {"name": "mike_jones", "username": "MikeJones"},
   ];
-
+//Test
   // Dummy data for suggested friends
   final List<Map<String, String>> _suggestedFriends = [
     {"name": "trentarnold66", "username": "Trent Alexander-Arnold"},
