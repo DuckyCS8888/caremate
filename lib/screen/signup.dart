@@ -27,42 +27,33 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Register the user with Firebase Authentication
-        UserCredential userCredential = await _auth
-            .createUserWithEmailAndPassword(
-              email: _emailController.text.trim(),
-              password: _passwordController.text.trim(),
-            );
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
         final user = userCredential.user;
         if (user != null) {
-          // Save the user email in Firestore (only email for now)
-          await _firestore.collection('users').doc(user.uid).set({
+          // Store Firebase Authentication UID in the Firestore user document
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
             'email': _emailController.text.trim(),
+            'uid': user.uid,  // Store the uid so you can reference it later
           });
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => LoginPage()),
           );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign Up Successful!')));
         }
-        // Show success message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Sign Up Successful!')));
       } on FirebaseAuthException catch (e) {
-        // Handle Firebase authentication errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Authentication Error: ${e.message}')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Authentication Error: ${e.message}')));
       } catch (e) {
-        // Handle other errors
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

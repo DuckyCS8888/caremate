@@ -10,7 +10,7 @@ class HelpRequestPage extends StatefulWidget {
 }
 
 class _HelpRequestPageState extends State<HelpRequestPage> {
-  final _formKey = GlobalKey<FormState>();  // Global key for form validation
+  final _formKey = GlobalKey<FormState>(); // Global key for form validation
   TextEditingController _titleController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
   TextEditingController _locationController = TextEditingController();
@@ -36,7 +36,8 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
       setState(() {
         _latitude = position.latitude;
         _longitude = position.longitude;
-        _locationController.text = 'Latitude: $_latitude, Longitude: $_longitude'; // Auto-filled location
+        _locationController.text =
+            'Latitude: $_latitude, Longitude: $_longitude'; // Auto-filled location
       });
     } else {
       print('Location permission denied');
@@ -47,15 +48,21 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
   Future<void> _submitRequest() async {
     if (_formKey.currentState?.validate() ?? false) {
       User? currentUser = FirebaseAuth.instance.currentUser;
-      String userId = currentUser?.uid ?? ""; // Default to empty string if not logged in
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User is not authenticated')));
+        return;
+      }
+      String userUid =
+          currentUser?.uid ?? ""; // Get the Firebase Authentication UID
 
-      if (userId.isNotEmpty) {
-        // Reference to the user's document in the 'users' collection
-        final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
+      if (userUid.isNotEmpty) {
         try {
-          // Add the help request to the 'requests' subcollection under the user
-          await userRef.collection('requests').add({
+          // Add the help request to the 'requests' subcollection under the user's document
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userUid) // This should match the user's document ID in Firestore
+              .collection('requests')
+              .add({
             'title': _titleController.text.trim(),
             'description': _descriptionController.text.trim(),
             'category': _selectedCategory,
@@ -64,11 +71,10 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
             'longitude': _longitude,
             'location': _locationController.text.trim(),
             'createdAt': FieldValue.serverTimestamp(),
-            'volunteerName': '',  // Initially empty until a volunteer accepts the request
-            'volunteerContact': '',  // Initially empty
-            'volunteerAccepted': false,  // Initially false
+            'volunteerName': '',
+            'volunteerContact': '',
+            'volunteerAccepted': false,
           });
-
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
@@ -90,7 +96,7 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,  // Associate the form with the key
+          key: _formKey, // Associate the form with the key
           child: ListView(
             children: [
               // Request Title Input with Validation
@@ -100,14 +106,19 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                   labelText: 'Request Title',
                   hintText: 'Enter the title of the request',
                   prefixIcon: Icon(Icons.title),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a title for the request';
                   }
-                  return null;  // Valid input
+                  return null; // Valid input
                 },
               ),
               SizedBox(height: 20),
@@ -119,15 +130,20 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                   labelText: 'Description',
                   hintText: 'Provide more details about the request',
                   prefixIcon: Icon(Icons.description),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                 ),
-                maxLines: 4,  // Allow multiple lines for the description
+                maxLines: 4, // Allow multiple lines for the description
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';
                   }
-                  return null;  // Valid input
+                  return null; // Valid input
                 },
               ),
               SizedBox(height: 20),
@@ -137,7 +153,9 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                 decoration: InputDecoration(
                   labelText: 'Category',
                   prefixIcon: Icon(Icons.category),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: DropdownButton<String>(
                   value: _selectedCategory,
@@ -147,13 +165,19 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                     });
                   },
                   isExpanded: true,
-                  items: <String>['Groceries', 'Transport', 'Companionship', 'Medication', 'Other']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  items:
+                      <String>[
+                        'Groceries',
+                        'Transport',
+                        'Companionship',
+                        'Medication',
+                        'Other',
+                      ].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                 ),
               ),
               SizedBox(height: 20),
@@ -163,7 +187,9 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                 decoration: InputDecoration(
                   labelText: 'Urgency',
                   prefixIcon: Icon(Icons.priority_high),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: DropdownButton<String>(
                   value: _selectedUrgency,
@@ -173,13 +199,17 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                     });
                   },
                   isExpanded: true,
-                  items: <String>['Low', 'Medium', 'High']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                  items:
+                      <String>[
+                        'Low',
+                        'Medium',
+                        'High',
+                      ].map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                 ),
               ),
               SizedBox(height: 20),
@@ -191,14 +221,19 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                   labelText: 'Location (auto-filled or type manually)',
                   hintText: 'Type location manually if needed',
                   prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please provide a location';
                   }
-                  return null;  // Valid input
+                  return null; // Valid input
                 },
               ),
               SizedBox(height: 20),
@@ -208,8 +243,11 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
                 onPressed: _submitRequest,
                 child: Text('Submit Request'),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 14), backgroundColor: Colors.orangeAccent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.orangeAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   textStyle: TextStyle(fontSize: 18),
                 ),
               ),
