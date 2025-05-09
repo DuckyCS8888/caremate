@@ -7,7 +7,7 @@ class CommunityForum extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text("Community Forum")),
+          title: Text("CareMate")),
       body: SingleChildScrollView(
         child: Column(
           children: [

@@ -32,10 +32,6 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text("CareMate"),
-      ),
       body: _pages[_selectedIndex],  // Display selected page
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -61,8 +57,10 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red,  // Color for selected item
-        unselectedItemColor: Colors.grey,  // Color for unselected items
+        selectedItemColor: Colors.orangeAccent,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         onTap: _onItemTapped,  // Handle item taps
       ),
     );
