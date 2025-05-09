@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'dart:async';
 
+import 'package:projects/screen/login.dart';
+
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -73,45 +75,53 @@ class _SignUpPageState extends State<SignUpPage> {
         );
         return;
       }
+
       try {
         // Register the user with Firebase Authentication
-        UserCredential userCredential = await _auth
-            .createUserWithEmailAndPassword(
-              email: _emailController.text,
-              password: _passwordController.text,
-            );
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-        // Upload profile picture to Firebase Storage
-        String profilePicUrl = '';
+        print('created');
+        final user = userCredential.user;
+        if (user != null) {
+          // Upload profile picture to Firebase Storage if picked
+          String profilePicUrl = '';
+          if (_isImagePicked && _selectedImage != null) {
+            final storageRef = _storage.ref().child('profile_pictures/${user.uid}.jpg');
+            await storageRef.putData(_selectedImage!);
+            profilePicUrl = await storageRef.getDownloadURL(); // Get the URL of the uploaded image
+          }
 
-        if (_isImagePicked && _selectedImage != null) {
-          // Upload images to Firebase Storage
-          final storageRef = _storage.ref().child('profile_pictures/${userCredential.user!.uid}.jpg');
-          await storageRef.putData(_selectedImage!);
-          profilePicUrl = await storageRef.getDownloadURL();
+          // Save the user information in Firestore
+          await _firestore.collection('users').doc(user.uid).set({
+            'username': _usernameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'dob': _dobController.text.trim(),
+            'contact': _contactController.text.trim(),
+            'profilePic': profilePicUrl, // URL of the profile picture
+          });
+
+          print('Success');
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign Up Successful!')),
+          );
+
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
         }
-
-        // Save the user information in Firestore
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'username': _usernameController.text,
-          'email': _emailController.text,
-          'dob': _dobController.text,
-          'contact': _contactController.text,
-          'profilePic': profilePicUrl, // Store the URL of the profile picture
-        });
-
-        // Show success message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Sign Up Successful!')));
-
-        // Navigate to the next screen after sign-up (example: Home page)
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
+      } on FirebaseAuthException catch (e) {
+        // Handle Firebase authentication errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication Error: ${e.message}')),
+        );
       } catch (e) {
-        // Handle error during sign-up (e.g., email already in use)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        // Handle other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
