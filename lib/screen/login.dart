@@ -1,9 +1,9 @@
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:projects/home.dart';
-import '../profile_setup.dart';
+import 'package:projects/home.dart'; // Import your CommunityScreen here
+import 'package:projects/profile_setup.dart'; // Import ProfileSetup page
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +14,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -31,13 +32,25 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Successful!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login Successful!')));
 
-        //Optionally, navigate to the home page after login
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileSetup()));
+        // Check if the user has completed their profile
+        DocumentSnapshot userDoc =
+            await _firestore
+                .collection('users')
+                .doc(userCredential.user!.uid)
+                .get();
 
+        if (userDoc.exists && userDoc.data() != null) {
+          var data = userDoc.data() as Map<String, dynamic>;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileSetupPage()),
+          );
+        }
       } on FirebaseAuthException catch (e) {
         // Handle Firebase authentication errors
         ScaffoldMessenger.of(context).showSnackBar(
@@ -45,9 +58,9 @@ class _LoginPageState extends State<LoginPage> {
         );
       } catch (e) {
         // Handle other errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -125,7 +138,8 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
                     fixedSize: Size(
-                      MediaQuery.of(context).size.width * 0.7, 50,
+                      MediaQuery.of(context).size.width * 0.7,
+                      50,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

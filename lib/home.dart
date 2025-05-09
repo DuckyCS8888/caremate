@@ -10,43 +10,7 @@ class CommunityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Contact',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-
-        useMaterial3: true,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.person),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<ProfileScreen>(
-                    builder:
-                        (context) => ProfileScreen(
-                          actions: [
-                            SignedOutAction((context) {
-                              Navigator.of(context).pop();
-                            }),
-                          ],
-                        ),
-                  ),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {}, //TODO: Navigate to the Insert Contact Screen,
-            ),
-          ],
-        ),
-        body: Center(child: Column(children: [UserWidget()])),
-      ),
-    );
+      );
   }
 }
 
