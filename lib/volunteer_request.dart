@@ -38,8 +38,11 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
       appBar: AppBar(
         title: Text('Nearby Requests'),
         backgroundColor: Colors.red,
-        titleTextStyle: TextStyle(color: Colors.white),
-        elevation: 4.0,  // Slight shadow for elevation
+        titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        elevation: 5.0,  // Slight shadow for elevation
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
       ),
       body: _volunteerLatitude == null || _volunteerLongitude == null
           ? Center(child: CircularProgressIndicator())
@@ -65,9 +68,10 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
               // Determine background color based on urgency
               Color urgencyColor = request['urgency'] == 'High' ? Colors.red[100]! : Colors.white;
               return Card(
-                elevation: 3.0,
-                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                elevation: 6.0,
+                margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+                shadowColor: Colors.black.withOpacity(0.2),
                 child: ListTile(
                   tileColor: urgencyColor, // Set background color based on urgency
                   contentPadding: EdgeInsets.all(16.0),
@@ -76,36 +80,48 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
-                      decoration: TextDecoration.underline, // This applies the underline
+                      color: Colors.blueAccent,
+                      decoration: TextDecoration.underline, // Underline the title
                     ),
                   ),
-
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${distance.toStringAsFixed(2)} km away', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                      Text(
+                        '${distance.toStringAsFixed(2)} km away',
+                        style: TextStyle(fontSize: 16, color: Colors.black87),
+                      ),
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.category, size: 16, color: Colors.blue),
-                          SizedBox(width: 4),
-                          Text('Category: ${request['category']}', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                          Icon(Icons.category, size: 18, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Text(
+                            'Category: ${request['category']}',
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
                         ],
                       ),
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.priority_high, size: 16, color: Colors.orange),
-                          SizedBox(width: 4),
-                          Text('Urgency: ${request['urgency']}', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                          Icon(Icons.priority_high, size: 18, color: Colors.orange),
+                          SizedBox(width: 8),
+                          Text(
+                            'Urgency: ${request['urgency']}',
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
                         ],
                       ),
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.location_on, size: 16, color: Colors.green),
-                          SizedBox(width: 4),
-                          Text('Location: ${request['location']}', style: TextStyle(fontSize: 16, color: Colors.black87)),
+                          Icon(Icons.location_on, size: 18, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(
+                            'Location: ${request['location']}',
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
+                          ),
                         ],
                       ),
                     ],

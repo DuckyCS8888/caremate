@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,21 +43,37 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
   }
 
   Future<void> _submitRequest() async {
-    if (_formKey.currentState?.validate() ?? false) {  // Validate form
-      // If form is valid, submit to Firestore
-      await FirebaseFirestore.instance.collection('requests').add({
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-        'category': _selectedCategory,
-        'urgency': _selectedUrgency,
-        'latitude': _latitude,
-        'longitude': _longitude,
-        'location': _locationController.text, // Store manually typed location
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
+    if (_formKey.currentState?.validate() ?? false) {
+      // Get current user's ID (assuming FirebaseAuth is used)
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String userId = currentUser?.uid ?? ""; // Default to empty string if not logged in
+
+      if (userId.isNotEmpty) {
+        // Reference to the user's document in the 'users' collection
+        final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
+        // Add the request to the 'requests' subcollection under the user
+        await userRef.collection('requests').add({
+          'title': _titleController.text,
+          'description': _descriptionController.text,
+          'category': _selectedCategory,
+          'urgency': _selectedUrgency,
+          'latitude': _latitude,
+          'longitude': _longitude,
+          'location': _locationController.text,
+          'createdAt': FieldValue.serverTimestamp(),
+          'volunteerName': '',  // Initially empty until a volunteer accepts the request
+          'volunteerContact': '',  // Initially empty
+          'volunteerAccepted': false,  // Initially false
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
+      } else {
+        print("User not logged in");
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
