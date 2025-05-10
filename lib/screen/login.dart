@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projects/home.dart';
-import 'package:projects/profile/profile_setup.dart';
+import 'package:projects/screen/profile_setup.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
