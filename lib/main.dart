@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HelpRequestPage(),  // Directly start with MainPage
+      home: WelcomeScreen(),  // Directly start with MainPage
     );
   }
 }
