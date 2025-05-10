@@ -58,36 +58,42 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
       String userUid = currentUser.uid; // Get the Firebase Authentication UID (auto-generated)
       String userEmail = currentUser.email ?? ''; // Get the email of the current user
 
-      if (userUid.isNotEmpty && userEmail.isNotEmpty) {
-        try {
-          // Add the help request to the 'requests' subcollection under the user's document
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userUid) // Use the Firebase Auth UID directly as the document ID
-              .collection('requests')
-              .add({
-            'title': _titleController.text.trim(),
-            'description': _descriptionController.text.trim(),
-            'category': _selectedCategory,
-            'urgency': _selectedUrgency,
-            'latitude': _latitude,
-            'longitude': _longitude,
-            'location': _locationController.text.trim(),
-            'createdAt': FieldValue.serverTimestamp(),
-            'volunteerContact': '',
-            'volunteerAccepted': false,
-            'userEmail': userEmail, // Store the email along with the request
-          });
+      try {
+        // Retrieve the username from Firestore
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userUid)
+            .get();
 
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
-        }
-      } else {
-        print("User not logged in");
+        String userName = userDoc['username'] ?? 'Unknown'; // Default to 'Unknown' if no username
+
+        // Add the help request to the 'requests' subcollection under the user's document
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userUid) // Use the Firebase Auth UID directly as the document ID
+            .collection('requests')
+            .add({
+          'title': _titleController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'category': _selectedCategory,
+          'urgency': _selectedUrgency,
+          'latitude': _latitude,
+          'longitude': _longitude,
+          'location': _locationController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'volunteerName': '', // Initially empty as no volunteer has accepted the request
+          'volunteerAccepted': false,
+          'userEmail': userEmail, // Store the email along with the request
+          'userName': userName,  // Store the username along with the request
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

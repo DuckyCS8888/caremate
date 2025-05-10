@@ -57,6 +57,7 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
         await _firestore.collection('users').doc(user.uid).set({
           'username': _usernameController.text.trim(),
           'email': user.email,
+          'uid': user.uid,
           'contact': _contactController.text.trim(),
           'profilePic': base64Image, // Store image as base64 string
         });

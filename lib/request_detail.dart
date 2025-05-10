@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:projects/volunteer_request.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,6 +31,7 @@ class RequestDetailPage extends StatefulWidget {
 
 class _RequestDetailPageState extends State<RequestDetailPage> {
   bool _isVolunteerAccepted = false;
+  String _volunteerName = '';
 
   @override
   void initState() {
@@ -56,10 +58,13 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
 
   // Function to check if the request has already been accepted
   Future<void> _checkIfAccepted() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
     try {
       final requestDoc = await FirebaseFirestore.instance
           .collection('users')
-          .doc(FirebaseAuth.instance.currentUser?.uid) // Get the current user's document
+          .doc(currentUser.uid) // Get the current user's document
           .collection('requests') // Access the subcollection
           .doc(widget.requestId) // Use the requestId
           .get();
@@ -67,6 +72,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       if (requestDoc.exists) {
         setState(() {
           _isVolunteerAccepted = requestDoc['volunteerAccepted'] ?? false;
+          _volunteerName = requestDoc['volunteerName'] ?? '';
         });
       }
     } catch (e) {
@@ -82,7 +88,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
       return;
     }
 
-    String volunteerContact = currentUser.email ?? '';  // Use the logged-in user's email as contact
+    // Retrieve the volunteer's username
+    String volunteerName = await _getUsername(currentUser.uid);  // Retrieve username
 
     try {
       // Update the request document using requestId to mark it as accepted and add volunteer details (email as contact)
@@ -92,18 +99,32 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
           .collection('requests') // Access the user's 'requests' subcollection
           .doc(widget.requestId) // Update the specific request by ID
           .update({
-        'volunteerContact': volunteerContact,  // Set the volunteer's contact to their email
+        'volunteerName': volunteerName,  // Set the volunteer's name to their username
         'volunteerAccepted': true,  // Mark the request as accepted
-        'volunteerUid': currentUser.uid,  // Store the volunteer's UID
       });
 
       setState(() {
         _isVolunteerAccepted = true;
+        _volunteerName = volunteerName;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('You have successfully accepted the request')));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
+    }
+  }
+
+  // Helper method to retrieve the username from Firestore
+  Future<String> _getUsername(String userId) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      return userDoc['username'] ?? 'Unknown';  // Return 'Unknown' if the username doesn't exist
+    } catch (e) {
+      return 'Unknown';
     }
   }
 
@@ -114,6 +135,15 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         title: Text('Request Details'),
         backgroundColor: Colors.orange,
         titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => VolunteerRequestPage()),
+            ); // Navigate to MainPage
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -203,16 +233,6 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 Text(
                   'Volunteer Info:',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Your Contact (Email)',
-                    border: OutlineInputBorder(),
-                    hintText: 'Your email will be used as contact',
-                  ),
-                  enabled: false,  // Disables editing since the email is automatically fetched
-                  controller: TextEditingController(text: FirebaseAuth.instance.currentUser?.email ?? ''),
                 ),
                 SizedBox(height: 16),
                 ElevatedButton(

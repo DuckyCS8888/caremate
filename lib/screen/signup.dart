@@ -40,7 +40,7 @@ class _SignUpPageState extends State<SignUpPage> {
           // Store the user's email and UID in Firestore after sign-up
           await _firestore.collection('users').doc(user.uid).set({
             'email': _emailController.text.trim(),
-            'uid': user.uid, // Add the UID
+            //'uid': user.uid, // Add the UID
           });
 
           Navigator.pushReplacement(
