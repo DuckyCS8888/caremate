@@ -24,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserData(); // Load data when the page is loaded
   }
 
+  
   // Function to load user data from Firestore
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
