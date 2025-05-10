@@ -54,6 +54,7 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
         String base64Image = base64Encode(_selectedImage!);
 
         await _firestore.collection('users').doc(user.uid).set({
+          'uid': user.uid,
           'username': _usernameController.text.trim(),
           'email': user.email,
           'contact': _contactController.text.trim(),
@@ -98,7 +99,7 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                     radius: 50,
                     backgroundImage: _isImagePicked
                         ? MemoryImage(_selectedImage!)
-                        : AssetImage('assets/images/default_profile.png') as ImageProvider,
+                        : AssetImage("assets/images/defaultpfp.png") as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 20),
