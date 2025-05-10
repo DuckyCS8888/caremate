@@ -308,10 +308,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
       notes.removeAt(index);
       times.removeAt(index);
 
-      await docRef.set({
-        'notes': notes,
-        'times': times, // Remove the time from Firestore
-      }, SetOptions(merge: true));
+      // If no notes remain for this day, delete the document
+      if (notes.isEmpty) {
+        await docRef.delete(); // Delete the entire document if no notes remain
+      } else {
+        await docRef.set({
+          'notes': notes,
+          'times': times, // Remove the time from Firestore
+        }, SetOptions(merge: true));
+      }
 
       // Update UI
       setState(() {
