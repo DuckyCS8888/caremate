@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends StatefulWidget {
-
   @override
   _CalendarScreenState createState() => _CalendarScreenState();
 }
@@ -26,11 +27,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   String? _reminderMessage = ''; // Reminder message for month view
   String? _selectedReminderTime;
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         title: Row(
@@ -83,7 +86,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.all(8),
-                // Improved design: Clean message display
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade300, width: 1),
                   borderRadius: BorderRadius.circular(8),
@@ -91,7 +93,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
                 child: Text(
                   _reminderMessage!,
-                  style: TextStyle(color: Colors.black, fontSize: 14), // Clean text styling
+                  style: TextStyle(color: Colors.black, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -114,6 +116,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  // Month View
   Widget buildMonthView() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -129,25 +132,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
             _focusedDay = focusedDay;
           });
 
-          if (dayNotes.containsKey(selectedDay) && reminderTimes.containsKey(selectedDay)) {
-            final List<String> notes = dayNotes[selectedDay]!;
-            final List<TimeOfDay> times = reminderTimes[selectedDay]!;
-
-            final Set<String> entries = {};
-            for (int i = 0; i < notes.length; i++) {
-              String formattedDate = "${selectedDay.day} ${_monthName(selectedDay.month)}";
-              String entry = "$formattedDate: ${notes[i]} at ${times[i].format(context)}";
-              entries.add(entry);
-            }
-
-            setState(() {
-              _reminderMessage = entries.join('\n');
-            });
-          } else {
-            setState(() {
-              _reminderMessage = '';
-            });
-          }
+          // Fetch data from Firestore for the selected day
+          fetchNotesFromFirestore(selectedDay);
         },
         calendarFormat: _calendarFormat,
         onFormatChanged: (format) {
@@ -163,6 +149,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         calendarBuilders: CalendarBuilders(
           markerBuilder: (context, date, events) {
             if (dayNotes.containsKey(date) && reminderTimes.containsKey(date)) {
+              List<String> notes = dayNotes[date]!;
+              List<TimeOfDay> times = reminderTimes[date]!;
+
+              if (notes.isEmpty || times.isEmpty) {
+                return SizedBox.shrink(); // No marker
+              }
+
               return Positioned(
                 bottom: 5,
                 child: Container(
@@ -182,6 +175,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  // Week View
   Widget buildWeekView() {
     DateTime startOfWeek = _selectedDay ?? _focusedDay;
     int dayOfWeek = startOfWeek.weekday;
@@ -239,6 +233,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  // Day View
   Widget buildDayView() {
     DateTime displayDay = _focusedDay;
     String weekday = weekDays[displayDay.weekday % 7];
@@ -359,6 +354,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       dayNotes[_selectedDay!]!.add(_noteController.text);
                       reminderTimes[_selectedDay!]!.add(_reminderTime!);
                     });
+
+                    // Save data to Firestore
+                    saveNoteToFirestore(_selectedDay!, _noteController.text, _reminderTime!);
+
                     Navigator.pop(context); // Close the dialog
                   }
                 },
@@ -382,6 +381,57 @@ class _CalendarScreenState extends State<CalendarScreen> {
       context: context,
       initialTime: TimeOfDay.now(),
     );
+  }
+
+  // Function to save note and reminder to Firestore under user ID
+  void saveNoteToFirestore(DateTime selectedDay, String note, TimeOfDay reminderTime) async {
+    String dateKey = selectedDay.toIso8601String().split('T').first;  // Convert the day into string format
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";  // Get the logged-in user's UID
+
+    if (userId.isEmpty) {
+      print("No user logged in.");
+      return;
+    }
+
+    DocumentReference docRef = _firestore.collection('users').doc(userId).collection('notes').doc(dateKey);
+
+    await docRef.set({
+      'notes': FieldValue.arrayUnion([note]),
+      'times': FieldValue.arrayUnion([reminderTime.format(context)]),
+    }, SetOptions(merge: true));  // Merge instead of overwriting existing data
+
+    print('Note and time saved successfully.');
+  }
+
+  // Fetch notes from Firestore for the logged-in user
+  void fetchNotesFromFirestore(DateTime selectedDay) async {
+    String dateKey = selectedDay.toIso8601String().split('T').first;
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";  // Get the logged-in user's UID
+
+    if (userId.isEmpty) {
+      print("No user logged in.");
+      return;
+    }
+
+    try {
+      DocumentSnapshot snapshot = await _firestore.collection('users').doc(userId).collection('notes').doc(dateKey).get();
+
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<String> notes = List<String>.from(data['notes'] ?? []);
+        List<String> times = List<String>.from(data['times'] ?? []);
+
+        setState(() {
+          dayNotes[selectedDay] = notes;
+          reminderTimes[selectedDay] = times.map((time) {
+            final parts = time.split(":");
+            return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+          }).toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching notes: $e');
+    }
   }
 
   String _monthName(int month) {
