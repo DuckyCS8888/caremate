@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart'; // Import intl package for formatting date
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -23,9 +24,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   ];
 
   Map<DateTime, List<String>> dayNotes = {}; // Stores notes for each day
-  Map<DateTime, List<TimeOfDay>> reminderTimes = {}; // Stores reminder times for each day
-  String? _reminderMessage = ''; // Reminder message for month view
-  String? _selectedReminderTime;
+  Map<DateTime, List<String>> reminderTimes = {}; // Stores reminder times for each day as Strings
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -50,15 +49,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               onSelected: (value) {
                 setState(() {
                   _currentView = value;
-                  if (_currentView != 'Month') {
-                    _reminderMessage = '';
-                  }
                 });
               },
               itemBuilder: (context) => [
                 PopupMenuItem(value: 'Month', child: Text('Month View')),
-                PopupMenuItem(value: 'Week', child: Text('Week View')),
-                PopupMenuItem(value: 'Day', child: Text('Day View')),
               ],
             ),
             SizedBox(width: 16),
@@ -78,26 +72,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: Icon(Icons.add, size: 30, color: Colors.white),
             ),
           ),
-          if (_reminderMessage != null && _reminderMessage!.isNotEmpty && _currentView == 'Month')
-            Positioned(
-              bottom: 100,
-              left: 0,
-              right: 0,
-              child: Container(
-                alignment: Alignment.center,
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300, width: 1),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child: Text(
-                  _reminderMessage!,
-                  style: TextStyle(color: Colors.black, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -107,10 +81,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     switch (_currentView) {
       case 'Month':
         return buildMonthView();
-      case 'Week':
-        return buildWeekView();
-      case 'Day':
-        return buildDayView();
       default:
         return Center(child: Text("Invalid view"));
     }
@@ -120,206 +90,92 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget buildMonthView() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: TableCalendar(
-        headerStyle: HeaderStyle(formatButtonVisible: false, titleCentered: true),
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2030, 12, 31),
-        focusedDay: _focusedDay,
-        selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-        onDaySelected: (selectedDay, focusedDay) {
-          setState(() {
-            _selectedDay = selectedDay;
-            _focusedDay = focusedDay;
-          });
-
-          // Fetch data from Firestore for the selected day
-          fetchNotesFromFirestore(selectedDay);
-        },
-        calendarFormat: _calendarFormat,
-        onFormatChanged: (format) {
-          setState(() {
-            _calendarFormat = format;
-          });
-        },
-        startingDayOfWeek: StartingDayOfWeek.sunday,
-        calendarStyle: CalendarStyle(
-          todayDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
-          selectedDecoration: BoxDecoration(color: Colors.deepOrange, shape: BoxShape.circle),
-        ),
-        calendarBuilders: CalendarBuilders(
-          markerBuilder: (context, date, events) {
-            if (dayNotes.containsKey(date) && reminderTimes.containsKey(date)) {
-              List<String> notes = dayNotes[date]!;
-              List<TimeOfDay> times = reminderTimes[date]!;
-
-              if (notes.isEmpty || times.isEmpty) {
-                return SizedBox.shrink(); // No marker
-              }
-
-              return Positioned(
-                bottom: 5,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              );
-            }
-            return SizedBox.shrink();
-          },
-        ),
-      ),
-    );
-  }
-
-  // Week View
-  Widget buildWeekView() {
-    DateTime startOfWeek = _selectedDay ?? _focusedDay;
-    int dayOfWeek = startOfWeek.weekday;
-    DateTime firstDayOfWeek = startOfWeek.subtract(Duration(days: dayOfWeek - 1));
-
-    List<DateTime> daysOfWeek = List.generate(7, (index) {
-      return firstDayOfWeek.add(Duration(days: index));
-    });
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
-          const SizedBox(height: 16),
-          Text('Week View', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: daysOfWeek.map((day) {
-              List<String> notes = dayNotes[day] ?? [];
-              List<TimeOfDay> times = reminderTimes[day] ?? [];
+          TableCalendar(
+            headerStyle: HeaderStyle(formatButtonVisible: false, titleCentered: true),
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _focusedDay,
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
 
-              Set<String> uniqueEntries = {};
-              for (int i = 0; i < notes.length; i++) {
-                String formattedDate = "${day.day} ${_monthName(day.month)}";
-                String entry = "$formattedDate: ${notes[i]} at ${times[i].format(context)}";
-                uniqueEntries.add(entry);
-              }
+              // Fetch data from Firestore for the selected day
+              fetchNotesFromFirestore(selectedDay);
+            },
+            calendarFormat: _calendarFormat,
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+            startingDayOfWeek: StartingDayOfWeek.sunday,
+            calendarStyle: CalendarStyle(
+              todayDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
+              selectedDecoration: BoxDecoration(color: Colors.deepOrange, shape: BoxShape.circle),
+            ),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (dayNotes.containsKey(date) && reminderTimes.containsKey(date)) {
+                  List<String> notes = dayNotes[date]!;
+                  List<String> times = reminderTimes[date]!;
 
-              return Expanded(
-                child: Column(
-                  children: [
-                    Text('${day.day}', style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    ...uniqueEntries.map((entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Text(entry, style: TextStyle(fontSize: 12, color: Colors.blue)),
-                    )),
-                    IconButton(
-                      icon: Icon(Icons.add, size: 20, color: Colors.blue),
+                  if (notes.isEmpty || times.isEmpty) {
+                    return SizedBox.shrink(); // No marker
+                  }
+
+                  return Positioned(
+                    bottom: 5,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+          ),
+          // Below calendar, display notes for selected day
+          if (_selectedDay != null && dayNotes.containsKey(_selectedDay))
+            Expanded(
+              child: ListView.builder(
+                itemCount: dayNotes[_selectedDay]?.length ?? 0,
+                itemBuilder: (context, index) {
+                  String note = dayNotes[_selectedDay]?[index] ?? '';
+                  String time = reminderTimes[_selectedDay]?[index] ?? ''; // Default is empty string
+                  if (time.isEmpty) {
+                    time = 'No time set'; // Avoid showing any default or unwanted time like 08:00
+                  }
+
+                  // Format the selected day to show only the date without time
+                  String formattedDate = _selectedDay != null
+                      ? DateFormat('yyyy-MM-dd').format(_selectedDay!)
+                      : '';
+
+                  return ListTile(
+                    title: Text("$note at $time"), // Display time with note
+                    subtitle: Text(formattedDate), // Display the formatted date
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
-                        setState(() {
-                          _selectedDay = day;
-                        });
-                        _showAddNoteDialog(context);
+                        _deleteNoteAndTime(_selectedDay!, index);
                       },
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                  );
+                },
+              ),
+            ),
         ],
       ),
-    );
-  }
-
-  // Day View
-  Widget buildDayView() {
-    DateTime displayDay = _focusedDay;
-    String weekday = weekDays[displayDay.weekday % 7];
-    String month = _monthName(_focusedDay.month);
-
-    List<String> notes = dayNotes[displayDay] ?? [];
-    List<TimeOfDay> times = reminderTimes[displayDay] ?? [];
-
-    // Sorting notes and times based on the reminder time (earliest to latest)
-    List<MapEntry<TimeOfDay, String>> sortedNotes = [];
-    for (int i = 0; i < notes.length; i++) {
-      sortedNotes.add(MapEntry(times[i], notes[i]));
-    }
-
-    sortedNotes.sort((a, b) => a.key.compareTo(b.key));
-
-    return Column(
-      children: [
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_left),
-              onPressed: () {
-                setState(() {
-                  _focusedDay = _focusedDay.subtract(Duration(days: 1));
-                  _selectedDay = _focusedDay;
-                });
-              },
-            ),
-            Column(
-              children: [
-                Text('$month ${_focusedDay.year}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text(weekday, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('${displayDay.day}', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            IconButton(
-              icon: Icon(Icons.arrow_right),
-              onPressed: () {
-                setState(() {
-                  _focusedDay = _focusedDay.add(Duration(days: 1));
-                  _selectedDay = _focusedDay;
-                });
-              },
-            ),
-          ],
-        ),
-        const Divider(),
-        Expanded(
-          child: ListView.builder(
-            itemCount: sortedNotes.length,
-            itemBuilder: (context, index) {
-              String timeText = sortedNotes[index].key.format(context);
-              String noteAtThisTime = sortedNotes[index].value;
-
-              return Container(
-                padding: EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade300, width: 1.0)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("[$timeText]   [$noteAtThisTime]", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            dayNotes[displayDay]?.removeAt(index);
-                            reminderTimes[displayDay]?.removeAt(index);
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -345,18 +201,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 onPressed: () async {
                   _reminderTime = await _selectTime(context);
                   if (_reminderTime != null) {
+                    // Safely format the time to the format user prefers
+                    String formattedTime = _reminderTime!.format(context);
                     setState(() {
-                      _selectedReminderTime = _reminderTime!.format(context);
                       if (!dayNotes.containsKey(_selectedDay)) {
                         dayNotes[_selectedDay!] = [];
                         reminderTimes[_selectedDay!] = [];
                       }
                       dayNotes[_selectedDay!]!.add(_noteController.text);
-                      reminderTimes[_selectedDay!]!.add(_reminderTime!);
+                      reminderTimes[_selectedDay!]!.add(formattedTime); // Save time as String
                     });
 
                     // Save data to Firestore
-                    saveNoteToFirestore(_selectedDay!, _noteController.text, _reminderTime!);
+                    saveNoteToFirestore(_selectedDay!, _noteController.text, formattedTime);
 
                     Navigator.pop(context); // Close the dialog
                   }
@@ -384,7 +241,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   // Function to save note and reminder to Firestore under user ID
-  void saveNoteToFirestore(DateTime selectedDay, String note, TimeOfDay reminderTime) async {
+  void saveNoteToFirestore(DateTime selectedDay, String note, String reminderTime) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;  // Convert the day into string format
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";  // Get the logged-in user's UID
 
@@ -397,7 +254,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     await docRef.set({
       'notes': FieldValue.arrayUnion([note]),
-      'times': FieldValue.arrayUnion([reminderTime.format(context)]),
+      'times': FieldValue.arrayUnion([reminderTime]), // Save formatted time as String
     }, SetOptions(merge: true));  // Merge instead of overwriting existing data
 
     print('Note and time saved successfully.');
@@ -423,14 +280,53 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         setState(() {
           dayNotes[selectedDay] = notes;
-          reminderTimes[selectedDay] = times.map((time) {
-            final parts = time.split(":");
-            return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-          }).toList();
+          reminderTimes[selectedDay] = times; // Store the time as String
         });
       }
     } catch (e) {
       print('Error fetching notes: $e');
+    }
+  }
+
+  // Delete note and reminder time from Firestore and UI
+  void _deleteNoteAndTime(DateTime selectedDay, int index) async {
+    String dateKey = selectedDay.toIso8601String().split('T').first;
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    if (userId.isEmpty) {
+      print("No user logged in.");
+      return;
+    }
+
+    try {
+      DocumentReference docRef = _firestore.collection('users').doc(userId).collection('notes').doc(dateKey);
+
+      // Remove the specific note and time from Firestore
+      List<String> notes = dayNotes[selectedDay]!;
+      List<String> times = reminderTimes[selectedDay]!;
+
+      notes.removeAt(index);
+      times.removeAt(index);
+
+      // If no notes remain for this day, delete the document
+      if (notes.isEmpty) {
+        await docRef.delete(); // Delete the entire document if no notes remain
+      } else {
+        await docRef.set({
+          'notes': notes,
+          'times': times, // Remove the time from Firestore
+        }, SetOptions(merge: true));
+      }
+
+      // Update UI
+      setState(() {
+        dayNotes[selectedDay] = notes;
+        reminderTimes[selectedDay] = times;
+      });
+
+      print('Note and time deleted successfully.');
+    } catch (e) {
+      print('Error deleting note: $e');
     }
   }
 
