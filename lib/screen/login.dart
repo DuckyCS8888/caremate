@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projects/home.dart';
-import 'package:projects/profile/profile_setup.dart';
+import 'package:projects/screen/profile_setup.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,49 +21,68 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // Function to handle the login process
+  // Function for login
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Sign in the user with Firebase Authentication
+        // Sign in the user
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        // Show success message
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Login Successful!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login Successful!')),
+        );
 
-        // Check if the user has completed their profile
-        DocumentSnapshot userDoc =
-            await _firestore
-                .collection('users')
-                .doc(userCredential.user!.uid)
-                .get();
+        // Fetch user document
+        DocumentSnapshot userDoc = await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
 
         if (userDoc.exists && userDoc.data() != null) {
           var data = userDoc.data() as Map<String, dynamic>;
 
+          // Check if profile is complete
+          bool isProfileComplete =
+              data['username'] != null && data['username'].toString().isNotEmpty &&
+                  data['contact'] != null && data['contact'].toString().isNotEmpty &&
+                  data['profilePic'] != null && data['profilePic'].toString().isNotEmpty &&
+                  data['job'] != null && data['job'].toString().isNotEmpty &&
+                  data['bio'] != null && data['bio'].toString().isNotEmpty;
+
+          if (isProfileComplete) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MainPage()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => ProfileSetupPage()),
+            );
+          }
+        } else {
+          // If document does not exist or is null, redirect to profile setup
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => ProfileSetupPage()),
           );
         }
       } on FirebaseAuthException catch (e) {
-        // Handle Firebase authentication errors
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Authentication Error: ${e.message}')),
         );
       } catch (e) {
-        // Handle other errors
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
