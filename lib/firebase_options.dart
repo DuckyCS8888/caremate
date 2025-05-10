@@ -62,3 +62,4 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.projects',
   );
 }
+

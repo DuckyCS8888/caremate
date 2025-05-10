@@ -1,36 +1,91 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:projects/profile/profilepage.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert'; // For base64 encoding // ProfilePage to navigate after save
 
 class EditProfilePage extends StatefulWidget {
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 }
-//Test
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _jobController = TextEditingController();
   TextEditingController _bioController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
   TextEditingController _contactController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _confirmPasswordController = TextEditingController();
-
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
 
   File? _profileImage;  // Variable to store the profile picture
   final ImagePicker _picker = ImagePicker();
+  Uint8List? _selectedImage;
+  bool _isImagePicked = false;
 
   // Function to pick the image
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final imageBytes = await pickedFile.readAsBytes();
       setState(() {
-        _profileImage = File(pickedFile.path);
+        _selectedImage = imageBytes;
+        _isImagePicked = true;
       });
+    }
+  }
+
+  // Convert image to base64 string
+  String _convertImageToBase64(Uint8List imageFile) {
+    return base64Encode(imageFile);
+  }
+
+  // Save Profile to Firebase
+  Future<void> _saveProfile() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (_usernameController.text.isEmpty ||
+          _jobController.text.isEmpty ||
+          _bioController.text.isEmpty ||
+          _contactController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please fill in all fields')),
+        );
+        return;
+      }
+
+      try {
+        String profilePicBase64 = '';
+
+        // If profile image is selected, convert it to base64
+        if (_selectedImage != null) {
+          profilePicBase64 = _convertImageToBase64(_selectedImage!);
+        }
+
+        // Save profile data to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'username': _usernameController.text.trim(),
+          'job': _jobController.text.trim(),
+          'bio': _bioController.text.trim(),
+          'contact': _contactController.text.trim(),
+          'profilePic': profilePicBase64.isEmpty ? user.photoURL : profilePicBase64, // Save base64 or default photo URL
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile Updated Successfully!')),
+        );
+
+        // Navigate back to ProfilePage and refresh the data
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate back to ProfilePage
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating profile: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -40,12 +95,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       appBar: AppBar(
         title: Text("Edit Profile", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -54,21 +103,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
             key: _formKey,
             child: Column(
               children: [
-                // Profile Picture Section
                 GestureDetector(
                   onTap: _pickImage,  // When tapped, allow the user to pick an image
                   child: CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.grey[300],
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : NetworkImage('https://via.placeholder.com/150') as ImageProvider,
-                    child: _profileImage == null
-                        ? Icon(Icons.camera_alt, size: 30)
-                        : null,
+                    backgroundImage: _isImagePicked
+                        ? MemoryImage(_selectedImage!)
+                        : AssetImage('assets/images/default_profile.png') as ImageProvider,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 // Username Field
                 TextFormField(
@@ -81,7 +126,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return null;
                   },
                 ),
-                // Username Field
+                const SizedBox(height: 20),
+
+                // Job Field
                 TextFormField(
                   controller: _jobController,
                   decoration: InputDecoration(labelText: 'Job'),
@@ -92,7 +139,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return null;
                   },
                 ),
-                // Username Field
+                const SizedBox(height: 20),
+
+                // Bio Field
                 TextFormField(
                   controller: _bioController,
                   decoration: InputDecoration(labelText: 'Bio'),
@@ -103,16 +152,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return null;
                   },
                 ),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(labelText: 'Email'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty || !value.contains('@')) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
+                const SizedBox(height: 20),
+
+                // Contact Number Field
                 TextFormField(
                   controller: _contactController,
                   decoration: InputDecoration(labelText: 'Contact Number'),
@@ -123,79 +165,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return null;
                   },
                 ),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.orange,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 8) {
-                      return 'Password must be at least 8 characters';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: !_isConfirmPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isConfirmPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.orange,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
                 SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      // Update profile logic
-                      print('Profile updated');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black, backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _saveProfile();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.black, backgroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text("Save Changes"),
                     ),
-                  ),
-                  child: Text("Save Changes"),
+                    ElevatedButton(
+                      onPressed: () {},  // No function for this button
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.black, backgroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text("Log Out"),
+                    ),
+                  ],
                 ),
               ],
             ),
