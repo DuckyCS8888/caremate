@@ -1,13 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../home.dart';
 import 'dart:typed_data';
-
-import 'package:projects/home.dart';
-import 'package:projects/main.dart';
+import 'dart:convert';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -42,14 +39,10 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
 
   Future<void> _saveProfile() async {
     final user = _auth.currentUser;
-    print('Test1');
     if (user != null) {
-      print('Test2');
       if (_usernameController.text.isEmpty ||
           _contactController.text.isEmpty ||
           !_isImagePicked) {
-        print('Test3');
-        // Show error if any field is empty
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Please fill in all fields and pick a profile picture')),
         );
@@ -57,37 +50,27 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
       }
 
       try {
-        print('Test4');
-        // Upload the profile picture to Firebase Storage if picked
-        String profilePicUrl = '';
-        if (_isImagePicked && _selectedImage != null) {
-          print('Test5');
-          // Upload to Firebase Storage
-          final storageRef = FirebaseStorage.instance.ref().child('profile_pictures/${user.uid}.jpg');
-          //-->await storageRef.putData(_selectedImage!);
-          //-->profilePicUrl = await storageRef.getDownloadURL(); // Get the URL of the uploaded image
-        }
-        print('Test6');
+        // Convert the image to Base64
+        String base64Image = base64Encode(_selectedImage!);
+
         // Save profile data to Firestore
         await _firestore.collection('users').doc(user.uid).set({
           'username': _usernameController.text.trim(),
-          'email': user.email, // Email from Firebase Authentication
+          'email': user.email,
           'contact': _contactController.text.trim(),
-          'profilePic': profilePicUrl, // Store profile picture URL
+          'profilePic': base64Image, // Store image as base64 string
         });
 
-        print('Success');
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Profile Saved Successfully!')),
         );
 
-        // Navigate to main UI (replace with your main screen route)
-        Navigator.pushReplacement(context,
+        // Navigate to main screen
+        Navigator.pushReplacement(
+          context,
           MaterialPageRoute(builder: (context) => MainPage()),
         );
       } catch (e) {
-        // Show specific error message for troubleshooting
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error saving profile: ${e.toString()}')),
         );
@@ -95,11 +78,13 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Complete Your Profile'), backgroundColor: Colors.orange),
+      appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text('Complete Your Profile'),
+          backgroundColor: Colors.orange),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: SingleChildScrollView(
