@@ -43,74 +43,101 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
     }
   }
 
-
-  // Accept the help request and update Firestore
-  Future<void> _acceptRequest(String requestId, String userId) async {
+// Accept the help request and update Firestore
+  Future<void> _acceptRequest(String requestId, String userName, String userId) async {
     try {
+      // Get the current authenticated user
       User? currentUser = FirebaseAuth.instance.currentUser;
       print("Current User: ${currentUser?.uid}");
+
+      // Check if user is authenticated
       if (currentUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not authenticated')));
         return;
       }
 
+      String userUid = currentUser.uid; // Get the Firebase Authentication UID (auto-generated)
+      String volunteerName = '';
+
+      try {
+        // Fetch userName from Firestore (from the 'users' collection)
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userUid)
+            .get();
+
+        // If userName exists, use it; otherwise, default to 'Unknown Volunteer'
+        volunteerName = userDoc['username'] ?? 'Unknown Volunteer';
+      } catch (e) {
+        print("Error fetching user data: $e");
+      }
+
+      // Update Firestore to mark the request as accepted and associate the volunteer
       await FirebaseFirestore.instance
           .collection('users')
-          .doc(userId)
+          .doc(userId) // Use the unique userId to find the correct user
           .collection('requests')
           .doc(requestId)
           .update({
         'volunteerAccepted': true,
-        'volunteerName': currentUser.displayName ?? 'Unknown Volunteer',
+        'volunteerName': volunteerName, // Use fetched volunteerName
+      })
+          .then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request Accepted')));
+        _fetchRequests(); // Refresh the request list after accepting
+      })
+          .catchError((e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating request: $e')));
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request Accepted')));
-      _fetchRequests(); // Refresh the request list after accepting
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
     }
   }
 
-  // Show request details
+  // Show request details in a dialog
   void _showRequestDetails(DocumentSnapshot request) {
-    String title = request['title'];
-    //String description = request['description'];
-    String category = request['category'];
-    String urgency = request['urgency'];
-    double latitude = request['latitude'];
-    double longitude = request['longitude'];
+    // Make sure you are extracting the correct fields from the request
+    String title = request['title'] ?? 'No title';  // Default value in case key doesn't exist
+    String description = request['description'] ?? 'No description available';
+    String category = request['category'] ?? 'No category';
+    String urgency = request['urgency'] ?? 'No urgency';
+    double latitude = request['latitude'] ?? 0.0;
+    double longitude = request['longitude'] ?? 0.0;
+    String userName = request['userName'] ?? 'Unknown User';  // Ensure 'userName' exists
+    String userId = request['userId'] ?? '';  // Ensure 'userId' exists
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              //Text('Description: $description'),
-              Text('Category: $category'),
-              Text('Urgency: $urgency'),
-              SizedBox(height: 10),
-              Text('Location: Latitude: $latitude, Longitude: $longitude'),
-              SizedBox(height: 10),
-              // Button to open Google Maps directions
-              ElevatedButton(
-                onPressed: () => _openGoogleMaps(latitude, longitude),
-                child: Text('Open Directions in Google Maps'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              ),
-            ],
+          content: SingleChildScrollView(  // To allow scrolling if content overflows
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Description: $description'),
+                Text('Category: $category'),
+                Text('Urgency: $urgency'),
+                SizedBox(height: 10),
+                Text('Location: Latitude: $latitude, Longitude: $longitude'),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () => _openGoogleMaps(latitude, longitude),
+                  child: Text('Open Directions in Google Maps'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(),  // Close the dialog
               child: Text('Close'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                _acceptRequest(request.id, request['userId']);
+                Navigator.of(context).pop(); // Close the dialog before accepting
+                _acceptRequest(request.id, userName, userId); // Pass both userName and userId
               },
               child: Text('Accept Request'),
             ),
