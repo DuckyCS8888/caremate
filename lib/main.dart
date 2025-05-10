@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:projects/screen/login.dart';
 import 'package:projects/screen/signup.dart';
 import 'firebase_options.dart';
+import 'help_forum.dart';
 import 'help_request.dart';
 import 'home.dart';
 import 'screen/welcome_screen.dart';
-import 'CalendarScreenState.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: CalendarScreen(),  // Directly start with MainPage
+      home: LoginPage(),  // Directly start with MainPage
     );
   }
 }

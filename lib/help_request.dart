@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'help_forum.dart';
+
 class HelpRequestPage extends StatefulWidget {
   @override
   _HelpRequestPageState createState() => _HelpRequestPageState();
@@ -52,15 +54,16 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User is not authenticated')));
         return;
       }
-      String userUid =
-          currentUser?.uid ?? ""; // Get the Firebase Authentication UID
 
-      if (userUid.isNotEmpty) {
+      String userUid = currentUser.uid; // Get the Firebase Authentication UID (auto-generated)
+      String userEmail = currentUser.email ?? ''; // Get the email of the current user
+
+      if (userUid.isNotEmpty && userEmail.isNotEmpty) {
         try {
           // Add the help request to the 'requests' subcollection under the user's document
           await FirebaseFirestore.instance
               .collection('users')
-              .doc(userUid) // This should match the user's document ID in Firestore
+              .doc(userUid) // Use the Firebase Auth UID directly as the document ID
               .collection('requests')
               .add({
             'title': _titleController.text.trim(),
@@ -71,10 +74,11 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
             'longitude': _longitude,
             'location': _locationController.text.trim(),
             'createdAt': FieldValue.serverTimestamp(),
-            'volunteerName': '',
             'volunteerContact': '',
             'volunteerAccepted': false,
+            'userEmail': userEmail, // Store the email along with the request
           });
+
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
@@ -92,6 +96,15 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
         automaticallyImplyLeading: false,
         title: Text('Submit a Help Request'),
         backgroundColor: Colors.orange,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HelpForumPage()),
+            ); // Navigate to MainPage
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

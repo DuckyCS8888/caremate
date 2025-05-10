@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class RequestDetailPage extends StatelessWidget {
+class RequestDetailPage extends StatefulWidget {
   final String title;
   final String description;
-  final String category;  // New field for category
-  final String urgency;   // New field for urgency
+  final String category;
+  final String urgency;
   final num latitude;
   final num longitude;
-  final String location;  // New field for location (manual or auto-filled)
+  final String location;
+  final String requestId; // Added requestId to uniquely identify the request
 
   RequestDetailPage({
     required this.title,
@@ -18,11 +21,25 @@ class RequestDetailPage extends StatelessWidget {
     required this.latitude,
     required this.longitude,
     required this.location,
+    required this.requestId,  // Pass requestId as a parameter
   });
+
+  @override
+  _RequestDetailPageState createState() => _RequestDetailPageState();
+}
+
+class _RequestDetailPageState extends State<RequestDetailPage> {
+  bool _isVolunteerAccepted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfAccepted();
+  }
 
   // Method to open Google Maps directions
   Future<void> _openGoogleMaps() async {
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude';
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=${widget.latitude},${widget.longitude}';
     final Uri uri = Uri.parse(url); // Convert string URL into Uri
 
     // Check if the URL can be launched
@@ -37,22 +54,76 @@ class RequestDetailPage extends StatelessWidget {
     }
   }
 
+  // Function to check if the request has already been accepted
+  Future<void> _checkIfAccepted() async {
+    try {
+      final requestDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser?.uid) // Get the current user's document
+          .collection('requests') // Access the subcollection
+          .doc(widget.requestId) // Use the requestId
+          .get();
+
+      if (requestDoc.exists) {
+        setState(() {
+          _isVolunteerAccepted = requestDoc['volunteerAccepted'] ?? false;
+        });
+      }
+    } catch (e) {
+      print('Error checking request status: $e');
+    }
+  }
+
+  // Function to accept the request
+  Future<void> _acceptRequest() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('You must be logged in to accept a request')));
+      return;
+    }
+
+    String volunteerContact = currentUser.email ?? '';  // Use the logged-in user's email as contact
+
+    try {
+      // Update the request document using requestId to mark it as accepted and add volunteer details (email as contact)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid) // Get the current user's document
+          .collection('requests') // Access the user's 'requests' subcollection
+          .doc(widget.requestId) // Update the specific request by ID
+          .update({
+        'volunteerContact': volunteerContact,  // Set the volunteer's contact to their email
+        'volunteerAccepted': true,  // Mark the request as accepted
+        'volunteerUid': currentUser.uid,  // Store the volunteer's UID
+      });
+
+      setState(() {
+        _isVolunteerAccepted = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('You have successfully accepted the request')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Request Details'),
-        backgroundColor: Colors.orange,  // Consistent app bar color
+        backgroundColor: Colors.orange,
+        titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(  // Allow scrolling for smaller screens
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Title of the request with enhanced style
               Text(
-                'Title: $title',
+                'Title: ${widget.title}',
                 style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -63,7 +134,7 @@ class RequestDetailPage extends StatelessWidget {
 
               // Description of the request with proper spacing
               Text(
-                'Description: $description',
+                'Description: ${widget.description}',
                 style: TextStyle(fontSize: 20, color: Colors.black87),
               ),
               SizedBox(height: 20),
@@ -74,7 +145,7 @@ class RequestDetailPage extends StatelessWidget {
                   Icon(Icons.category, color: Colors.blueAccent),
                   SizedBox(width: 8),
                   Text(
-                    'Category: $category',
+                    'Category: ${widget.category}',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -87,7 +158,7 @@ class RequestDetailPage extends StatelessWidget {
                   Icon(Icons.priority_high, color: Colors.orange),
                   SizedBox(width: 8),
                   Text(
-                    'Urgency: $urgency',
+                    'Urgency: ${widget.urgency}',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -101,7 +172,7 @@ class RequestDetailPage extends StatelessWidget {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Location: $location',
+                      'Location: ${widget.location}',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -125,6 +196,43 @@ class RequestDetailPage extends StatelessWidget {
                   child: Text('Get Directions'),
                 ),
               ),
+              SizedBox(height: 30),
+
+              // Volunteer Acceptance Section
+              if (!_isVolunteerAccepted) ...[  // If the request hasn't been accepted yet
+                Text(
+                  'Volunteer Info:',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 16),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Your Contact (Email)',
+                    border: OutlineInputBorder(),
+                    hintText: 'Your email will be used as contact',
+                  ),
+                  enabled: false,  // Disables editing since the email is automatically fetched
+                  controller: TextEditingController(text: FirebaseAuth.instance.currentUser?.email ?? ''),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _acceptRequest,
+                  child: Text('Accept Request'),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: TextStyle(fontSize: 18),
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  'You have accepted this request!',
+                  style: TextStyle(fontSize: 18, color: Colors.green),
+                ),
+              ],
             ],
           ),
         ),

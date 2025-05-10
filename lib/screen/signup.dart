@@ -19,7 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -27,33 +27,44 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
       try {
-        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        // Register the user with Firebase Authentication
+        UserCredential userCredential = await _auth
+            .createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
         final user = userCredential.user;
         if (user != null) {
-          // Store Firebase Authentication UID in the Firestore user document
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          // Save the user email in Firestore (only email for now)
+          // Store the user's email and UID in Firestore after sign-up
+          await _firestore.collection('users').doc(user.uid).set({
             'email': _emailController.text.trim(),
-            'uid': user.uid,  // Store the uid so you can reference it later
+            'uid': user.uid, // Add the UID
           });
 
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => LoginPage()),
           );
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Sign Up Successful!')));
         }
+        // Show success message
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Sign Up Successful!')));
       } on FirebaseAuthException catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Authentication Error: ${e.message}')));
+        // Handle Firebase authentication errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication Error: ${e.message}')),
+        );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        // Handle other errors
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
