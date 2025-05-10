@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:projects/request_detail.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VolunteerRequestPage extends StatefulWidget {
   @override
@@ -10,229 +9,160 @@ class VolunteerRequestPage extends StatefulWidget {
 }
 
 class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
-  double? _volunteerLatitude, _volunteerLongitude;
+  List<DocumentSnapshot> _requests = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _getVolunteerLocation();
+    _fetchRequests();
   }
 
-  // Get volunteer's current location
-  Future<void> _getVolunteerLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+  // Fetch all available help requests from Firestore
+  Future<void> _fetchRequests() async {
+    try {
+      // Querying across all requests subcollections
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collectionGroup('requests')  // Fetch all requests across all users
+          .where('volunteerAccepted', isEqualTo: false)  // Only unaccepted requests
+          .orderBy('createdAt')
+          .get();
+      print("Total Requests: ${querySnapshot.docs.length}");
+      if (querySnapshot.docs.isNotEmpty) {
+        print("Request Data: ${querySnapshot.docs[0].data()}");
+      }
+      setState(() {
+        _requests = querySnapshot.docs;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error fetching requests: $e')));
+    }
+  }
+
+
+  // Accept the help request and update Firestore
+  Future<void> _acceptRequest(String requestId, String userId) async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      print("Current User: ${currentUser?.uid}");
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not authenticated')));
+        return;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('requests')
+          .doc(requestId)
+          .update({
+        'volunteerAccepted': true,
+        'volunteerName': currentUser.displayName ?? 'Unknown Volunteer',
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request Accepted')));
+      _fetchRequests(); // Refresh the request list after accepting
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
+    }
+  }
+
+  // Show request details
+  void _showRequestDetails(DocumentSnapshot request) {
+    String title = request['title'];
+    //String description = request['description'];
+    String category = request['category'];
+    String urgency = request['urgency'];
+    double latitude = request['latitude'];
+    double longitude = request['longitude'];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              //Text('Description: $description'),
+              Text('Category: $category'),
+              Text('Urgency: $urgency'),
+              SizedBox(height: 10),
+              Text('Location: Latitude: $latitude, Longitude: $longitude'),
+              SizedBox(height: 10),
+              // Button to open Google Maps directions
+              ElevatedButton(
+                onPressed: () => _openGoogleMaps(latitude, longitude),
+                child: Text('Open Directions in Google Maps'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _acceptRequest(request.id, request['userId']);
+              },
+              child: Text('Accept Request'),
+            ),
+          ],
+        );
+      },
     );
-    setState(() {
-      _volunteerLatitude = position.latitude;
-      _volunteerLongitude = position.longitude;
-    });
   }
 
-  // Calculate distance between volunteer and request location (in km)
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000; // distance in km
+  // Method to open Google Maps directions
+  Future<void> _openGoogleMaps(double latitude, double longitude) async {
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude';
+    final Uri uri = Uri.parse(url); // Convert string URL into Uri
+
+    // Check if the URL can be launched
+    if (await canLaunchUrl(uri)) {
+      // Launch the URL in the default browser or Google Maps app
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nearby Requests'),
-        backgroundColor: Colors.red,
-        titleTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        elevation: 5.0, // Slight shadow for elevation
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
+        title: Text('Available Help Requests'),
+        backgroundColor: Colors.orange,
       ),
-      body: _volunteerLatitude == null || _volunteerLongitude == null
+      body: _loading
           ? Center(child: CircularProgressIndicator())
-          : StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collectionGroup('requests')  // This works for all 'requests' subcollections
-            .where('volunteerAccepted', isEqualTo: false) // Only fetch unaccepted requests
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            print('Error: ${snapshot.error}');
-            return Center(child: Text('Something went wrong'));
-          }
-
-          final requests = snapshot.data!.docs;
-          print('Number of requests: ${requests.length}'); // Debugging line
-
-          if (requests.isEmpty) {
-            return Center(child: Text("No requests available"));
-          }
-
-          return ListView.builder(
-            itemCount: requests.length,
-            itemBuilder: (context, index) {
-              final request = requests[index];
-              final latitude = request['latitude'];
-              final longitude = request['longitude'];
-
-              if (latitude == null || longitude == null) {
-                print('Missing location data for request ID: ${request.id}');
-                return ListTile(title: Text('Missing location data'));
-              }
-
-              final distance = _calculateDistance(
-                _volunteerLatitude!,
-                _volunteerLongitude!,
-                latitude,
-                longitude,
-              );
-
-              Color urgencyColor = request['urgency'] == 'High' ? Colors.red[100]! : Colors.white;
-
-              return Card(
-                elevation: 6.0,
-                margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-                shadowColor: Colors.black.withOpacity(0.2),
-                child: ListTile(
-                  tileColor: urgencyColor,
-                  contentPadding: EdgeInsets.all(16.0),
-                  title: Text(
-                    request['title'],
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.blueAccent,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${distance.toStringAsFixed(2)} km away',
-                        style: TextStyle(fontSize: 12, color: Colors.black87),
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.category, size: 16, color: Colors.blue),
-                          SizedBox(width: 8),
-                          Text(
-                            'Category: ${request['category']}',
-                            style: TextStyle(fontSize: 12, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.priority_high, size: 16, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text(
-                            'Urgency: ${request['urgency']}',
-                            style: TextStyle(fontSize: 12, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, size: 16, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text(
-                            'Location: ${request['location']}',
-                            style: TextStyle(fontSize: 12, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RequestDetailPage(
-                          title: request['title'],
-                          description: request['description'],
-                          category: request['category'],
-                          urgency: request['urgency'],
-                          latitude: request['latitude'],
-                          longitude: request['longitude'],
-                          location: request['location'],
-                          requestId: request.id,
-                        ),
-                      ),
-                    );
-                  },
-                  trailing: ElevatedButton(
-                    onPressed: () {
-                      _acceptRequest(request.id, request.reference.parent.id);
-                    },
-                    child: Text('Accept'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+          : ListView.builder(
+        itemCount: _requests.length,
+        itemBuilder: (context, index) {
+          var request = _requests[index];
+          return Card(
+            margin: EdgeInsets.all(8),
+            child: ListTile(
+              title: Text(request['title']),
+              subtitle: Text(request['category']),
+              trailing: IconButton(
+                icon: Icon(Icons.info),
+                onPressed: () => _showRequestDetails(request),
+              ),
+            ),
           );
         },
-      )
-
+      ),
     );
-  }
-
-  // Function to accept the request
-  Future<void> _acceptRequest(String requestId, String userId) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You must be logged in to accept a request')),
-      );
-      return;
-    }
-
-    String volunteerName = await _getUsername(
-      currentUser.uid,
-    ); // Retrieve username
-    try {
-      // Update the request document using requestId to mark it as accepted and add volunteer details (email as contact)
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId) // User document ID
-          .collection('requests')
-          .doc(requestId) // Use the requestId to update the request
-          .update({
-        'volunteerName': volunteerName, // Set the volunteer's name to their username
-        'volunteerAccepted': true, // Mark the request as accepted
-      });
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Request accepted successfully')));
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error accepting request: $e')));
-    }
-  }
-
-  // Helper method to retrieve the username from Firestore
-  Future<String> _getUsername(String userId) async {
-    try {
-      DocumentSnapshot userDoc =
-      await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
-      return userDoc['username'] ?? 'Unknown'; // Return 'Unknown' if the username doesn't exist
-    } catch (e) {
-      return 'Unknown';
-    }
   }
 }
