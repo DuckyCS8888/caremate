@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'edit_request.dart';
@@ -17,10 +19,39 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
   String _filterStatus = 'unaccepted'; // Default filter for unaccepted requests
   int _totalRequests = 0;
 
+  // Volunteer location variables
+  double? _latitude;
+  double? _longitude;
+
   @override
   void initState() {
     super.initState();
     _fetchRequests();
+    _getVolunteerLocation(); // Get volunteer location when the page is loaded
+  }
+
+  // Fetch the volunteer's location using Geolocator
+  Future<void> _getVolunteerLocation() async {
+    var status = await Permission.location.request();
+    if (status.isGranted) {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+      });
+    } else {
+      print('Location permission denied');
+    }
+  }
+
+  // Method to calculate distance between volunteer and the requestor
+  Future<String> _calculateDistance(double volunteerLat, double volunteerLng, double requestLat, double requestLng) async {
+    double distanceInMeters = await Geolocator.distanceBetween(volunteerLat, volunteerLng, requestLat, requestLng);
+    double distanceInKilometers = distanceInMeters / 1000; // Convert meters to kilometers
+
+    return distanceInKilometers.toStringAsFixed(2) + ' km'; // Return distance with 2 decimal places
   }
 
   // Fetch all available help requests from Firestore
@@ -501,123 +532,144 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
           bool isOwnRequest = request['userId'] == FirebaseAuth.instance.currentUser?.uid;
           bool volunteerAccepted = request['volunteerAccepted'] ?? false;
 
-          return Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            elevation: 8,
-            margin: EdgeInsets.only(bottom: 12),
-            color: isHighUrgency
-                ? Colors.red[50]
-                : volunteerAccepted
-                ? Colors.green[50]
-                : Colors.white,
-            child: ListTile(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              leading: CircleAvatar(
-                backgroundColor: volunteerAccepted
-                    ? Colors.green
-                    : Colors.orangeAccent,
-                child: Icon(
-                  Icons.volunteer_activism,
-                  color: Colors.white,
+          // Coordinates of the requestor (user)
+          double requestLat = request['latitude'] ?? 0.0;
+          double requestLng = request['longitude'] ?? 0.0;
+
+          // Coordinates of the volunteer (current user's location)
+          double volunteerLat = _latitude ?? 0.0; // Volunteer latitude
+          double volunteerLng = _longitude ?? 0.0; // Volunteer longitude
+
+          return FutureBuilder<String>(
+            future: _calculateDistance(volunteerLat, volunteerLng, requestLat, requestLng),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+
+              String distance = snapshot.data ?? 'Calculating...';
+
+              return Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
                 ),
-              ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          request['title'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'By: ${request['userName'] ?? 'Unknown'}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                elevation: 8,
+                margin: EdgeInsets.only(bottom: 12),
+                color: isHighUrgency
+                    ? Colors.red[50]
+                    : volunteerAccepted
+                    ? Colors.green[50]
+                    : Colors.white,
+                child: ListTile(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: volunteerAccepted
+                        ? Colors.green
+                        : Colors.orangeAccent,
+                    child: Icon(
+                      Icons.volunteer_activism,
+                      color: Colors.white,
                     ),
                   ),
-                  if (isOwnRequest)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Chip(
-                        label: Text(
-                          'OWN',
-                          style: TextStyle(color: Colors.white),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              request['title'],
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'By: ${request['userName'] ?? 'Unknown'}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
-                        backgroundColor: Colors.blue,
                       ),
-                    ),
-                ],
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 8),
-                  Text('Category: ${request['category']}'),
-                  Text('Urgency: ${request['urgency']}'),
-                ],
-              ),
-              trailing: volunteerAccepted
-                  ? IconButton(
-                icon: Icon(
-                  Icons.cancel_outlined,
-                  color: Colors.red,
-                ),
-                onPressed: () => _cancelRequest(request.id, request['userId']),
-              )
-                  : isOwnRequest // Show Delete and Edit buttons if it's the user's own request
-                  ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Edit Button
-                  IconButton(
-                    icon: Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      // Navigate to the EditRequestPage
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditRequestPage(
-                            requestId: request.id,
-                            currentTitle: request['title'],
-                            currentDescription: request['description'],
-                            currentCategory: request['category'],
-                            currentUrgency: request['urgency'],
+                      if (isOwnRequest)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Chip(
+                            label: Text(
+                              'OWN',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.blue,
                           ),
                         ),
-                      );
-                    },
+                    ],
                   ),
-                  // Delete Button
-                  IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      // Trigger delete with confirmation
-                      _deleteRequest(request.id, request['userId']);
-                    },
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 8),
+                      Text('Category: ${request['category']}'),
+                      Text('Urgency: ${request['urgency']}'),
+                      SizedBox(height: 4),
+                      Text('Distance: $distance'), // Display distance
+                    ],
                   ),
-                ],
-              )
-                  : Icon(
-                Icons.info_outline,
-                color: Colors.blueGrey,
-              ),
-              onTap: () => _showRequestDetails(request),
-            ),
+                  trailing: volunteerAccepted
+                      ? IconButton(
+                    icon: Icon(
+                      Icons.cancel_outlined,
+                      color: Colors.red,
+                    ),
+                    onPressed: () => _cancelRequest(request.id, request['userId']),
+                  )
+                      : isOwnRequest // Show Delete and Edit buttons if it's the user's own request
+                      ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Edit Button
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          // Navigate to the EditRequestPage
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditRequestPage(
+                                requestId: request.id,
+                                currentTitle: request['title'],
+                                currentDescription: request['description'],
+                                currentCategory: request['category'],
+                                currentUrgency: request['urgency'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Delete Button
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          // Trigger delete with confirmation
+                          _deleteRequest(request.id, request['userId']);
+                        },
+                      ),
+                    ],
+                  )
+                      : Icon(
+                    Icons.info_outline,
+                    color: Colors.blueGrey,
+                  ),
+                  onTap: () => _showRequestDetails(request),
+                ),
+              );
+            },
           );
         },
       ),
