@@ -98,10 +98,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-
-
-
-
   // Function to delete the post
   void _deletePost(String postId) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -298,9 +294,8 @@ class _ProfilePageState extends State<ProfilePage> {
         Uint8List decodedImage = base64Decode(post['image']);
         imageWidget = Image.memory(
           decodedImage,
-          height: 200,
           width: double.infinity,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain, // Ensure the entire image fits within the available space
         );
       } catch (e) {
         imageWidget = Container(
@@ -333,7 +328,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Center(
                   child: Container(
                     width: 800,
-                    height: 400,
+                    height: 500,  // Increase the height of the dialog to fit the image
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -346,80 +341,82 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: _profilePic != null
-                                ? MemoryImage(_profilePic!)
-                                : NetworkImage('https://via.placeholder.com/150'),
-                          ),
-                          title: Text(
-                            _username,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: CircleAvatar(
+                              radius: 20,
+                              backgroundImage: _profilePic != null
+                                  ? MemoryImage(_profilePic!)
+                                  : NetworkImage('https://via.placeholder.com/150'),
+                            ),
+                            title: Text(
+                              _username,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              post['location'] ?? 'Unknown',
+                              style: GoogleFonts.merriweather(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
-                          subtitle: Text(
-                            post['location'] ?? 'Unknown',
-                            style: GoogleFonts.merriweather(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
+                          SizedBox(height: 10),
+                          Text(
+                            post['content'] ?? '',
+                            style: TextStyle(fontSize: 14, color: Colors.black),
                           ),
-                          trailing: Text(
-                            formattedDate,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
+                          SizedBox(height: 10),
+                          imageWidget, // Updated to show the full image
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.favorite,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    '${post['likes'] != null && post['likes'] is List ? post['likes'].length : 0} Likes',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.comment_outlined,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    '1 Comments', // Assuming 1 comment for now
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          post['content'] ?? '',
-                          style: TextStyle(fontSize: 14, color: Colors.black),
-                        ),
-                        SizedBox(height: 10),
-                        imageWidget,
-                        SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.favorite,
-                                  color: Colors.red,
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  '${post['likes'] != null && post['likes'] is List ? post['likes'].length : 0} Likes',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.comment_outlined,
-                                  color: Colors.black,
-                                ),
-                                SizedBox(width: 5),
-                                Text(
-                                  '1 Comments', // Assuming 1 comment for now
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -430,8 +427,6 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -602,17 +597,17 @@ class _ProfilePageState extends State<ProfilePage> {
 
               // Display posts in GridView
               SizedBox(height: 20),  // Add spacing between buttons and post images
+              // Display posts in GridView
               GridView.builder(
                 shrinkWrap: true,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 12,  // Increased spacing between columns
-                  mainAxisSpacing: 12,   // Increased spacing between rows
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: _userPosts.length,
                 itemBuilder: (context, index) {
                   String imageUrl = _userPosts[index]['image']; // Assuming the post has an 'image' field
-
                   return GestureDetector(
                     onTap: () => _showPostDetailsDialog(_userPosts[index]), // Show post details dialog
                     child: Stack(
@@ -622,12 +617,22 @@ class _ProfilePageState extends State<ProfilePage> {
                           base64Decode(imageUrl),
                           fit: BoxFit.cover,
                         ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              // Show delete confirmation dialog
+                              _showDeleteConfirmationDialog(_userPosts[index].id);
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   );
                 },
               ),
-
               SizedBox(height: 20),
             ],
           ),
