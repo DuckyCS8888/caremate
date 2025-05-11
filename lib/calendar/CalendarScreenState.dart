@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:projects/calendar/notification_helper.dart';
@@ -80,7 +81,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             Text(
               'Calendar',
-              style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.comicNeue(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Colors.deepOrange,
+              ),
             ),
             Spacer(),
 
