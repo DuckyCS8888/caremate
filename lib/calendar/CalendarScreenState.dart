@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart'; // Import intl package for formatting date
-import 'package:projects/calendar/notification_helper.dart';  // Import your Notification Helper
-import 'package:permission_handler/permission_handler.dart';  // Import permission handler
+import 'package:intl/intl.dart';
+import 'package:projects/calendar/notification_helper.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -27,27 +27,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<String>> dayNotes = {}; // Stores notes for each day
   Map<DateTime, List<String>> reminderTimes = {}; // Stores reminder times for each day as Strings
-  List<Map<String, dynamic>> _reminders = []; // List to store reminders
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    requestNotificationPermission(); // Request notification permission
-    NotificationHelper.initializeNotification(); // Initialize notifications
-    _loadReminders(); // Load reminders from Firestore
+    requestNotificationPermission();
+    NotificationHelper.initializeNotification();
+    _loadReminders();
   }
 
-  // Request notification permission using permission handler
   Future<void> requestNotificationPermission() async {
     if (await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
   }
 
-  // Load reminders from Firestore (you can customize this as per your need)
   void _loadReminders() async {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
     if (userId.isEmpty) {
@@ -56,7 +55,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     try {
-      // Example: Fetch reminders for the logged-in user
       QuerySnapshot snapshot = await _firestore
           .collection('users')
           .doc(userId)
@@ -65,7 +63,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
       snapshot.docs.forEach((doc) {
         print("Reminder: ${doc.data()}");
-        // You can store these reminders as needed, e.g., in a list or map
       });
     } catch (e) {
       print("Error loading reminders: $e");
@@ -81,26 +78,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
         elevation: 0,
         title: Row(
           children: [
-            Icon(Icons.menu, color: Colors.black),
-            SizedBox(width: 8),
             Text(
               'Calendar',
               style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Spacer(),
-            PopupMenuButton<String>(
-              icon: Icon(Icons.calendar_today, color: Colors.black),
-              onSelected: (value) {
-                setState(() {
-                  _currentView = value;
-                });
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(value: 'Month', child: Text('Month View')),
-              ],
-            ),
+
             SizedBox(width: 16),
-            Icon(Icons.search, color: Colors.black),
+            Container(
+              width: 180,
+              height: 40,
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search notes...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search, size: 20),
+                    onPressed: () => _searchNoteAndJump(_searchController.text),
+                  ),
+                ),
+                onSubmitted: _searchNoteAndJump,
+              ),
+            ),
           ],
         ),
       ),
@@ -130,7 +136,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  // Month View
   Widget buildMonthView() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -147,8 +152,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
-
-              // Fetch data from Firestore for the selected day
               fetchNotesFromFirestore(selectedDay);
             },
             calendarFormat: _calendarFormat,
@@ -164,23 +167,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
-                if (dayNotes.containsKey(date) && reminderTimes.containsKey(date)) {
-                  List<String> notes = dayNotes[date]!;
-                  List<String> times = reminderTimes[date]!;
-
-                  if (notes.isEmpty || times.isEmpty) {
-                    return SizedBox.shrink(); // No marker
-                  }
-
+                if (dayNotes.containsKey(date)) {
                   return Positioned(
                     bottom: 5,
                     child: Container(
                       width: 6,
                       height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                     ),
                   );
                 }
@@ -188,26 +181,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
               },
             ),
           ),
-          // Below calendar, display notes for selected day
           if (_selectedDay != null && dayNotes.containsKey(_selectedDay))
             Expanded(
               child: ListView.builder(
                 itemCount: dayNotes[_selectedDay]?.length ?? 0,
                 itemBuilder: (context, index) {
                   String note = dayNotes[_selectedDay]?[index] ?? '';
-                  String time = reminderTimes[_selectedDay]?[index] ?? ''; // Default is empty string
-                  if (time.isEmpty) {
-                    time = 'No time set'; // Avoid showing any default or unwanted time like 08:00
-                  }
-
-                  // Format the selected day to show only the date without time
-                  String formattedDate = _selectedDay != null
-                      ? DateFormat('yyyy-MM-dd').format(_selectedDay!)
-                      : '';
+                  String time = reminderTimes[_selectedDay]?[index] ?? 'No time set';
+                  String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDay!);
 
                   return ListTile(
-                    title: Text("$note at $time"), // Display time with note
-                    subtitle: Text(formattedDate), // Display the formatted date
+                    title: Text("$note at $time"),
+                    subtitle: Text(formattedDate),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {
@@ -245,7 +230,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 onPressed: () async {
                   _reminderTime = await _selectTime(context);
                   if (_reminderTime != null) {
-                    // Safely format the time to the format user prefers
                     String formattedTime = _reminderTime!.format(context);
                     setState(() {
                       if (!dayNotes.containsKey(_selectedDay)) {
@@ -253,24 +237,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         reminderTimes[_selectedDay!] = [];
                       }
                       dayNotes[_selectedDay!]!.add(_noteController.text);
-                      reminderTimes[_selectedDay!]!.add(formattedTime); // Save time as String
+                      reminderTimes[_selectedDay!]!.add(formattedTime);
                     });
 
-                    // Save data to Firestore
                     saveNoteToFirestore(_selectedDay!, _noteController.text, formattedTime);
 
-                    // Schedule the notification
                     DateTime reminderDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(
                         '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} ${formattedTime}');
 
                     NotificationHelper.scheduleNotification(
-                      0, // Notification ID (can be unique per reminder)
-                      'Reminder', // Title
-                      _noteController.text, // Note text
-                      reminderDateTime, // Time for notification
+                      0,
+                      'Reminder',
+                      _noteController.text,
+                      reminderDateTime,
                     );
 
-                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context);
                   }
                 },
                 child: Text('Set Reminder'),
@@ -278,10 +260,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
           ],
         );
       },
@@ -289,41 +268,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<TimeOfDay?> _selectTime(BuildContext context) async {
-    return showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
+    return showTimePicker(context: context, initialTime: TimeOfDay.now());
   }
 
-  // Function to save note and reminder to Firestore under user ID
   void saveNoteToFirestore(DateTime selectedDay, String note, String reminderTime) async {
-    String dateKey = selectedDay.toIso8601String().split('T').first;  // Convert the day into string format
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";  // Get the logged-in user's UID
+    String dateKey = selectedDay.toIso8601String().split('T').first;
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
-    if (userId.isEmpty) {
-      print("No user logged in.");
-      return;
-    }
+    if (userId.isEmpty) return;
 
     DocumentReference docRef = _firestore.collection('users').doc(userId).collection('notes').doc(dateKey);
 
     await docRef.set({
       'notes': FieldValue.arrayUnion([note]),
-      'times': FieldValue.arrayUnion([reminderTime]), // Save formatted time as String
-    }, SetOptions(merge: true));  // Merge instead of overwriting existing data
-
-    print('Note and time saved successfully.');
+      'times': FieldValue.arrayUnion([reminderTime]),
+    }, SetOptions(merge: true));
   }
 
-  // Fetch notes from Firestore for the logged-in user
   void fetchNotesFromFirestore(DateTime selectedDay) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";  // Get the logged-in user's UID
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
-    if (userId.isEmpty) {
-      print("No user logged in.");
-      return;
-    }
+    if (userId.isEmpty) return;
 
     try {
       DocumentSnapshot snapshot = await _firestore.collection('users').doc(userId).collection('notes').doc(dateKey).get();
@@ -335,7 +301,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
         setState(() {
           dayNotes[selectedDay] = notes;
-          reminderTimes[selectedDay] = times; // Store the time as String
+          reminderTimes[selectedDay] = times;
         });
       }
     } catch (e) {
@@ -343,45 +309,72 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  // Delete note and reminder time from Firestore and UI
   void _deleteNoteAndTime(DateTime selectedDay, int index) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
 
-    if (userId.isEmpty) {
-      print("No user logged in.");
-      return;
-    }
+    if (userId.isEmpty) return;
 
     try {
       DocumentReference docRef = _firestore.collection('users').doc(userId).collection('notes').doc(dateKey);
 
-      // Remove the specific note and time from Firestore
       List<String> notes = dayNotes[selectedDay]!;
       List<String> times = reminderTimes[selectedDay]!;
 
       notes.removeAt(index);
       times.removeAt(index);
 
-      // If no notes remain for this day, delete the document
       if (notes.isEmpty) {
-        await docRef.delete(); // Delete the entire document if no notes remain
+        await docRef.delete();
       } else {
-        await docRef.set({
-          'notes': notes,
-          'times': times, // Remove the time from Firestore
-        }, SetOptions(merge: true));
+        await docRef.set({'notes': notes, 'times': times}, SetOptions(merge: true));
       }
 
-      // Update UI
       setState(() {
         dayNotes[selectedDay] = notes;
         reminderTimes[selectedDay] = times;
       });
-
-      print('Note and time deleted successfully.');
     } catch (e) {
       print('Error deleting note: $e');
+    }
+  }
+
+  void _searchNoteAndJump(String query) async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+    if (userId.isEmpty) return;
+
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .get();
+
+      for (var doc in snapshot.docs) {
+        DateTime date = DateTime.parse(doc.id);
+        List<String> notes = List<String>.from(doc['notes'] ?? []);
+
+        for (var note in notes) {
+          if (note.toLowerCase().contains(query.toLowerCase())) {
+            setState(() {
+              _selectedDay = date;
+              _focusedDay = date;
+            });
+            fetchNotesFromFirestore(date);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Found note on ${DateFormat('yyyy-MM-dd').format(date)}")),
+            );
+            _searchController.clear();
+            return;
+          }
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No matching note found.")),
+      );
+    } catch (e) {
+      print("Error searching notes: $e");
     }
   }
 }
