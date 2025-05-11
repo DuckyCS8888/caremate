@@ -334,12 +334,14 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool isLiked = false;
   int commentCount = 0; // Track the comment count
+  int likeCount = 0; // Track the like count
 
   @override
   void initState() {
     super.initState();
     _checkIfLiked();
     _fetchCommentCount();  // Fetch the comment count when the post card is created
+    _fetchLikeCount(); // Fetch like count for the post
   }
 
   // Fetch the comment count for this post
@@ -367,6 +369,37 @@ class _PostCardState extends State<PostCard> {
       });
     } catch (e) {
       print('Error fetching comment count: $e');
+    }
+  }
+
+  // Fetch the like count for this post (real-time listener)
+  Future<void> _fetchLikeCount() async {
+    try {
+      // Reference to the likes collection for this post
+      DocumentReference postRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('posts')
+          .doc(widget.postId);
+
+      // Listen to the changes in the likes collection in real-time
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('posts')
+          .doc(widget.postId)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists) {
+          var data = snapshot.data() as Map<String, dynamic>;
+          List likesList = data['likes'] ?? [];
+          setState(() {
+            likeCount = likesList.length; // Update like count
+          });
+        }
+      });
+    } catch (e) {
+      print('Error fetching like count: $e');
     }
   }
 
@@ -518,7 +551,7 @@ class _PostCardState extends State<PostCard> {
                       onPressed: _toggleLike, // Toggle like
                     ),
                     Text(
-                      '${widget.likes} Likes',
+                      '$likeCount Likes', // Display the real-time like count
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black), // Likes text style: bold, black, weight 600
                     ),
                   ],
@@ -558,6 +591,4 @@ class _PostCardState extends State<PostCard> {
     );
   }
 }
-
-
 
