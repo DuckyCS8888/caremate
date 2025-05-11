@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../ngo_page.dart';
 import 'help_request.dart';
 import 'package:projects/home.dart';
 import 'package:projects/volunteer_request.dart';
@@ -10,9 +12,13 @@ class HelpForumPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Help Forum',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: GoogleFonts.comicNeue(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            color: Colors.deepOrange,
+          ),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -22,7 +28,27 @@ class HelpForumPage extends StatelessWidget {
             ); // Navigate to MainPage
           },
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NGOPage()), // Navigate to NGOPage
+              );
+            },
+            child: Text(
+              'NGO Services',
+              style: TextStyle(
+                color: Colors.deepOrange, // Text color for the button
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline, // Underline the text
+              ),
+            ),
+          ),
+        ],
       ),
+
+      backgroundColor: Colors.white,
       body: SingleChildScrollView( // Allow the content to scroll
         child: Center( // Centering the content
           child: Column(
@@ -57,7 +83,7 @@ class HelpForumPage extends StatelessWidget {
                     Text(
                       'Help',
                       style: TextStyle(
-                        fontSize: 18.0,
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -93,7 +119,7 @@ class HelpForumPage extends StatelessWidget {
                     Text(
                       'Volunteer',
                       style: TextStyle(
-                        fontSize: 18.0,
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
