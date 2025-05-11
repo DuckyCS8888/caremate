@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'createPost.dart'; // Import your CreatePostPage
+import 'Comment.dart';
 
 class CommunityForum extends StatefulWidget {
   @override
@@ -219,8 +220,7 @@ class _CommunityForumState extends State<CommunityForum> {
                 itemBuilder: (context, index) {
                   var post = _posts[index];
                   String username =
-                      _usernames[post['userID']] ??
-                          'Anonymous'; // Get username for each post
+                      _usernames[post['userID']] ?? 'Anonymous'; // Get username for each post
                   String profilePicUrl =
                       _profilePics[post['userID']] ?? ''; // Get profile picture URL
                   return PostCard(
@@ -292,7 +292,7 @@ class CategoryButton extends StatelessWidget {
         onCategorySelected(categoryName);
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.orange : Colors.white, // Orange when selected, White when not selected
+        backgroundColor: isSelected ? Colors.deepOrangeAccent : Colors.white, // Orange when selected, White when not selected
         foregroundColor: isSelected ? Colors.white : Colors.black,   // White text when selected, Black text when not selected
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         shape: RoundedRectangleBorder(
@@ -333,11 +333,41 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool isLiked = false;
+  int commentCount = 0; // Track the comment count
 
   @override
   void initState() {
     super.initState();
     _checkIfLiked();
+    _fetchCommentCount();  // Fetch the comment count when the post card is created
+  }
+
+  // Fetch the comment count for this post
+  Future<void> _fetchCommentCount() async {
+    try {
+      // Reference to the comments collection for this post
+      DocumentReference postRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('posts')
+          .doc(widget.postId);
+
+      // Listen to the changes in the comments collection in real-time
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('posts')
+          .doc(widget.postId)
+          .collection('comments')
+          .snapshots()
+          .listen((snapshot) {
+        setState(() {
+          commentCount = snapshot.docs.length; // Set the number of documents in the comments collection
+        });
+      });
+    } catch (e) {
+      print('Error fetching comment count: $e');
+    }
   }
 
   // Check if the current user has already liked the post
@@ -493,19 +523,29 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ],
                 ),
-                // Custom comment image
+                // Comment section
                 SizedBox(width: 16),
                 Row(
                   children: [
-                    // Use the custom image (comment.png) for comments
                     IconButton(
-                      icon: Icon(Icons.comment_outlined, color: Colors.black), // Custom image as the comment icon
+                      icon: Icon(Icons.comment_outlined, color: Colors.black), // Comment icon
                       onPressed: () {
-                        // Implement comment functionality
+                        // Fetch the postOwnerID from the post data (you already have this in the post)
+                        String postOwnerID = widget.userId; // Assuming you store the userID in the post object
+                        // Navigate to the ViewCommentsPage when comment icon is clicked
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ViewCommentsPage(
+                              postID: widget.postId,           // Pass postId
+                              postOwnerID: postOwnerID,        // Pass postOwnerID (the user ID of the post owner)
+                            ),
+                          ),
+                        );
                       },
                     ),
                     Text(
-                      '${widget.likes} Comments', // Assuming comment count is same as likes for this example
+                      '$commentCount Comments', // Display the number of comments
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black), // Comment count style
                     ),
                   ],
@@ -518,5 +558,6 @@ class _PostCardState extends State<PostCard> {
     );
   }
 }
+
 
 

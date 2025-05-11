@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'help_request.dart';
-import 'home.dart';
-import 'ngo_page.dart';
-import 'volunteer_request.dart';
+import 'package:projects/home.dart';
+import 'package:projects/volunteer_request.dart';
 
 class HelpForumPage extends StatelessWidget {
   @override
@@ -12,13 +10,9 @@ class HelpForumPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Help Forum',
-          style: GoogleFonts.comicNeue(
-            fontSize: 26,
-            fontWeight: FontWeight.w900, // Replace with your desired font family
-            color: Colors.deepOrange,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -28,27 +22,7 @@ class HelpForumPage extends StatelessWidget {
             ); // Navigate to MainPage
           },
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => NGOPage()), // Navigate to NGOPage
-              );
-            },
-            child: Text(
-              'NGO Services',
-              style: TextStyle(
-                color: Colors.deepOrange, // Text color for the button
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
       ),
-
-      backgroundColor: Colors.white,
       body: SingleChildScrollView( // Allow the content to scroll
         child: Center( // Centering the content
           child: Column(

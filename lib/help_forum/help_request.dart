@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import 'help_forum.dart';
 
 class HelpRequestPage extends StatefulWidget {
@@ -103,13 +103,8 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Submit a Help Request',
-          style: GoogleFonts.comicNeue(
-          fontSize: 26,
-          fontWeight: FontWeight.w900, // Replace with your desired font family
-          color: Colors.deepOrange,
-        ),),
-        backgroundColor: Colors.white,
+        title: Text('Submit a Help Request'),
+        backgroundColor: Colors.orange,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -120,7 +115,6 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
           },
         ),
       ),
-      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -269,7 +263,7 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
               // Submit Button with Style
               ElevatedButton(
                 onPressed: _submitRequest,
-                child: Text('Submit Request',style: TextStyle(color: Colors.white),),
+                child: Text('Submit Request'),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.orangeAccent,

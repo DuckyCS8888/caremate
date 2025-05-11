@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'calendar/CalendarScreenState.dart';
 import 'community/community.dart';
 import 'first_aid/first_aid.dart';
-import 'help_forum.dart';
+import 'help_forum/help_forum.dart';
 import 'profile/profilepage.dart';
 
 class MainPage extends StatefulWidget {
@@ -68,7 +68,7 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.orangeAccent,
+        selectedItemColor: Colors.deepOrange,
         unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
