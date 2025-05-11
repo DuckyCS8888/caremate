@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 import 'help_request.dart';
 import 'home.dart';
 import 'screen/welcome_screen.dart';
-import 'CalendarScreenState.dart';
+import 'calendar/CalendarScreenState.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WelcomeScreen(),  // Directly start with MainPage
+      home: MainPage(),  // Directly start with MainPage
     );
   }
 }
