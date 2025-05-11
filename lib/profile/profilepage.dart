@@ -509,7 +509,6 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -522,24 +521,28 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               "Profile Page",
               style: GoogleFonts.comicNeue(
-                fontSize: 25,
+                fontSize: 26,
                 fontWeight: FontWeight.w900,
                 color: Colors.deepOrange,
               ),
             ),
-            ElevatedButton(
-              onPressed: _logOut, // Log out function
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.black,
-                backgroundColor: Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _logOut, // Log out function
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.exit_to_app,  // Exit icon
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              child: Icon(
-                Icons.exit_to_app,  // Exit icon
-                color: Colors.black,
-              ),
+              ],
             ),
           ],
         ),
@@ -727,6 +730,8 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _addComment(String id) {}
+
+  _deleteUserData(String uid) {}
 }
 
 void main() {
