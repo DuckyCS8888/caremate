@@ -4,7 +4,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-
 import 'help_forum.dart';
 
 class HelpRequestPage extends StatefulWidget {
