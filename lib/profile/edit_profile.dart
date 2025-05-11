@@ -161,17 +161,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
             key: _formKey,
             child: Column(
               children: [
-                GestureDetector(
-                  onTap: _pickImage,  // When tapped, allow the user to pick an image
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _isImagePicked
-                        ? MemoryImage(_selectedImage!)
-                        : (_previousProfilePicBase64.isNotEmpty
-                        ? MemoryImage(base64Decode(_previousProfilePicBase64))
-                        : AssetImage('assets/images/default_profile.png')) as ImageProvider,
-                  ),
+                // Profile Image and "Profile Picture" text
+                Column(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickImage,  // When tapped, allow the user to pick an image
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: _isImagePicked
+                            ? MemoryImage(_selectedImage!)
+                            : (_previousProfilePicBase64.isNotEmpty
+                            ? MemoryImage(base64Decode(_previousProfilePicBase64))
+                            : AssetImage('assets/images/default_profile.png')) as ImageProvider,
+                      ),
+                    ),
+                    SizedBox(height: 8), // Add some spacing between the image and text
+                    Text(
+                      'Profile Picture',
+                      style: GoogleFonts.comicNeue(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
 
