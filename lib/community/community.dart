@@ -27,7 +27,7 @@ class _CommunityForumState extends State<CommunityForum> {
     _fetchPosts(); // Fetch posts when the widget is initialized
   }
 
-  // Fetch all available posts from Firestore
+  // Fetch posts based on selected category
   Future<void> _fetchPosts() async {
     setState(() {
       _loading = true;
@@ -37,6 +37,11 @@ class _CommunityForumState extends State<CommunityForum> {
     try {
       // Preparing the query
       Query query = FirebaseFirestore.instance.collectionGroup('posts');
+
+      // Filter by selected category if any
+      if (selectedCategory.isNotEmpty) {
+        query = query.where('category', isEqualTo: selectedCategory);
+      }
 
       // Add ordering by timestamp
       query = query.orderBy('timestamp', descending: true);
@@ -69,9 +74,7 @@ class _CommunityForumState extends State<CommunityForum> {
           _hasError = true;
           _errorMessage = 'Error fetching posts: $e';
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(_errorMessage)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_errorMessage)));
       }
     }
   }
@@ -86,21 +89,16 @@ class _CommunityForumState extends State<CommunityForum> {
       for (var post in posts) {
         String userId = post['userID']; // Get userID from post data
         if (!usernameMap.containsKey(userId)) {
-          DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
               .collection('users')
               .doc(userId)
               .get();
           if (userDoc.exists) {
-            usernameMap[userId] =
-                userDoc['username'] ?? 'Anonymous'; // Store username by userID
-            profilePicMap[userId] =
-                userDoc['profilePic'] ?? ''; // Store profile picture URL by userID
+            usernameMap[userId] = userDoc['username'] ?? 'Anonymous'; // Store username by userID
+            profilePicMap[userId] = userDoc['profilePic'] ?? ''; // Store profile picture URL by userID
           } else {
-            usernameMap[userId] =
-            'Anonymous'; // Fallback if username doesn't exist
-            profilePicMap[userId] =
-            ''; // Fallback if profile picture doesn't exist
+            usernameMap[userId] = 'Anonymous'; // Fallback if username doesn't exist
+            profilePicMap[userId] = ''; // Fallback if profile picture doesn't exist
           }
         }
       }
@@ -591,4 +589,3 @@ class _PostCardState extends State<PostCard> {
     );
   }
 }
-
