@@ -24,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String _profilePicUrl = ''; // Profile picture URL as base64 string
   Uint8List? _profilePic; // To hold decoded image data
   int _postCount = 0;  // For storing total post count
+  int _likesCount = 0; // For storing total likes count
   List<DocumentSnapshot> _userPosts = [];  // To store user's posts
 
   @override
@@ -63,7 +64,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Function to load user posts from Firestore
+  // Function to load user posts from Firestore and calculate the total likes
   Future<void> _loadUserPosts() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -74,12 +75,32 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _userPosts = postSnapshot.docs;
           _postCount = _userPosts.length;
+
+          // Initialize total likes count
+          _likesCount = 0;
+
+          // Loop through each post to calculate likes
+          _userPosts.forEach((post) {
+            // Check if 'likes' exists for the post, else set it to 0
+            var likes = post['likes'] != null ? post['likes'] : 0;
+
+            // If likes is a list, we count the number of likes in the list
+            if (likes is List) {
+              _likesCount += likes.length;
+            } else if (likes is int) {
+              _likesCount += likes;
+            }
+          });
         });
       } catch (e) {
         print('Error loading user posts: $e');
       }
     }
   }
+
+
+
+
 
   // Function to delete the post
   void _deletePost(String postId) async {
@@ -263,6 +284,154 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+// Function to show the post details in a dialog
+  void _showPostDetailsDialog(DocumentSnapshot post) {
+    String formattedDate = 'Unknown time';
+    if (post['timestamp'] != null) {
+      DateTime dateTime = post['timestamp'].toDate();
+      formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
+
+    Widget imageWidget = SizedBox.shrink();
+    if (post['image'] != null) {
+      try {
+        Uint8List decodedImage = base64Decode(post['image']);
+        imageWidget = Image.memory(
+          decodedImage,
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        imageWidget = Container(
+          height: 100,
+          color: Colors.grey[300],
+          child: Center(child: Text('Invalid image format')),
+        );
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent, // Transparent background for dialog
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).pop(); // Close the dialog when tapped
+            },
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                    child: Container(
+                      color: Colors.transparent, // Keep this transparent to avoid the black box
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 800,
+                    height: 400,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: CircleAvatar(
+                            radius: 20,
+                            backgroundImage: _profilePic != null
+                                ? MemoryImage(_profilePic!)
+                                : NetworkImage('https://via.placeholder.com/150'),
+                          ),
+                          title: Text(
+                            _username,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          subtitle: Text(
+                            post['location'] ?? 'Unknown',
+                            style: GoogleFonts.merriweather(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                          trailing: Text(
+                            formattedDate,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          post['content'] ?? '',
+                          style: TextStyle(fontSize: 14, color: Colors.black),
+                        ),
+                        SizedBox(height: 10),
+                        imageWidget,
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  '${post['likes'] != null && post['likes'] is List ? post['likes'].length : 0} Likes',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.comment_outlined,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  '1 Comments', // Assuming 1 comment for now
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -277,12 +446,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -333,28 +496,60 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 textAlign: TextAlign.center,
               ),
+
               SizedBox(height: 20),
 
-              // Total post count
-              Text(
-                '$_postCount',
-                style: GoogleFonts.comicNeue(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900, // Bold weight for the count
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Posts section
+                  Column(
+                    children: [
+                      Text(
+                        '$_postCount',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900, // Bold weight for the count
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'Posts',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 30),  // Spacing between "Posts" and "Likes"
+                  // Likes section
+                  Column(
+                    children: [
+                      Text(
+                        '$_likesCount',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900, // Bold weight for the count
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        'Likes',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              Text(
-                'Posts',
-                style: GoogleFonts.comicNeue(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
+              SizedBox(height: 20),
               // Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -405,7 +600,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
 
-              /// Display posts in GridView
+              // Display posts in GridView
               SizedBox(height: 20),  // Add spacing between buttons and post images
               GridView.builder(
                 shrinkWrap: true,
@@ -418,30 +613,21 @@ class _ProfilePageState extends State<ProfilePage> {
                 itemBuilder: (context, index) {
                   String imageUrl = _userPosts[index]['image']; // Assuming the post has an 'image' field
 
-                  return Stack(
-                    children: [
-                      // The image is displayed here, but no navigation happens
-                      GestureDetector(
-                        child: Image.memory(
+                  return GestureDetector(
+                    onTap: () => _showPostDetailsDialog(_userPosts[index]), // Show post details dialog
+                    child: Stack(
+                      children: [
+                        // The image is displayed here
+                        Image.memory(
                           base64Decode(imageUrl),
                           fit: BoxFit.cover,
                         ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            // Show delete confirmation dialog
-                            _showDeleteConfirmationDialog(_userPosts[index].id);
-                          },
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),
+
               SizedBox(height: 20),
             ],
           ),
