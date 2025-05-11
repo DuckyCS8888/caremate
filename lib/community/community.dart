@@ -86,21 +86,20 @@ class _CommunityForumState extends State<CommunityForum> {
         String userId = post['userID']; // Get userID from post data
         if (!usernameMap.containsKey(userId)) {
           DocumentSnapshot userDoc =
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(userId)
-                  .get();
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
           if (userDoc.exists) {
             usernameMap[userId] =
                 userDoc['username'] ?? 'Anonymous'; // Store username by userID
             profilePicMap[userId] =
-                userDoc['profilePic'] ??
-                ''; // Store profile picture URL by userID
+                userDoc['profilePic'] ?? ''; // Store profile picture URL by userID
           } else {
             usernameMap[userId] =
-                'Anonymous'; // Fallback if username doesn't exist
+            'Anonymous'; // Fallback if username doesn't exist
             profilePicMap[userId] =
-                ''; // Fallback if profile picture doesn't exist
+            ''; // Fallback if profile picture doesn't exist
           }
         }
       }
@@ -117,14 +116,14 @@ class _CommunityForumState extends State<CommunityForum> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
           "CareMate",
           style: GoogleFonts.comicNeue(
             fontSize: 35,
-            fontWeight:
-                FontWeight.w900, // Replace with your desired font family
+            fontWeight: FontWeight.w900, // Replace with your desired font family
             color: Colors.deepOrange,
           ),
         ),
@@ -196,60 +195,54 @@ class _CommunityForumState extends State<CommunityForum> {
 
           // Posts List
           Expanded(
-            child:
-                _loading
-                    ? Center(child: CircularProgressIndicator())
-                    : _hasError
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Failed to load posts'),
-                          ElevatedButton(
-                            onPressed: _fetchPosts,
-                            child: Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                    : _posts.isEmpty
-                    ? Center(child: Text('No posts available'))
-                    : RefreshIndicator(
-                      onRefresh: _fetchPosts,
-                      child: ListView.builder(
-                        itemCount: _posts.length,
-                        itemBuilder: (context, index) {
-                          var post = _posts[index];
-                          String username =
-                              _usernames[post['userID']] ??
-                              'Anonymous'; // Get username for each post
-                          String profilePicUrl =
-                              _profilePics[post['userID']] ??
-                              ''; // Get profile picture URL
-                          return PostCard(
-                            location: post['location'] ?? 'Unknown',
-                            content: post['content'] ?? '',
-                            image: post['image'] ?? '',
-                            likes:
-                                post['likes'] != null
-                                    ? (post['likes'] is List
-                                        ? post['likes'].length
-                                        : 0)
-                                    : 0,
-                            timestamp:
-                                post['timestamp'] is Timestamp
-                                    ? post['timestamp'] as Timestamp
-                                    : null,
-                            postId: post['id'],
-                            userId: post['userID'] ?? '',
-                            username:
-                                username, // Pass the correct username here
-                            profilePicUrl:
-                                profilePicUrl, // Pass the profile picture URL
-                          );
-                        },
-                      ),
-                    ),
+            child: _loading
+                ? Center(child: CircularProgressIndicator())
+                : _hasError
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Failed to load posts'),
+                  ElevatedButton(
+                    onPressed: _fetchPosts,
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+                : _posts.isEmpty
+                ? Center(child: Text('No posts available'))
+                : RefreshIndicator(
+              onRefresh: _fetchPosts,
+              child: ListView.builder(
+                itemCount: _posts.length,
+                itemBuilder: (context, index) {
+                  var post = _posts[index];
+                  String username =
+                      _usernames[post['userID']] ??
+                          'Anonymous'; // Get username for each post
+                  String profilePicUrl =
+                      _profilePics[post['userID']] ?? ''; // Get profile picture URL
+                  return PostCard(
+                    location: post['location'] ?? 'Unknown',
+                    content: post['content'] ?? '',
+                    image: post['image'] ?? '',
+                    likes: post['likes'] != null
+                        ? (post['likes'] is List
+                        ? post['likes'].length
+                        : 0)
+                        : 0,
+                    timestamp: post['timestamp'] is Timestamp
+                        ? post['timestamp'] as Timestamp
+                        : null,
+                    postId: post['id'],
+                    userId: post['userID'] ?? '',
+                    username: username, // Pass the correct username here
+                    profilePicUrl: profilePicUrl, // Pass the profile picture URL
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -287,10 +280,10 @@ class CategoryButton extends StatelessWidget {
   final bool isSelected;
 
   CategoryButton(
-    this.categoryName,
-    this.onCategorySelected, {
-    this.isSelected = false,
-  });
+      this.categoryName,
+      this.onCategorySelected, {
+        this.isSelected = false,
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -299,8 +292,12 @@ class CategoryButton extends StatelessWidget {
         onCategorySelected(categoryName);
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Theme.of(context).primaryColor : null,
-        foregroundColor: isSelected ? Colors.white : null,
+        backgroundColor: isSelected ? Colors.orange : Colors.white, // Orange when selected, White when not selected
+        foregroundColor: isSelected ? Colors.white : Colors.black,   // White text when selected, Black text when not selected
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
       ),
       child: Text(categoryName),
     );
@@ -377,16 +374,12 @@ class _PostCardState extends State<PostCard> {
       if (isLiked) {
         // If the user already liked, remove the like
         postRef.update({
-          'likes': FieldValue.arrayRemove([
-            FirebaseAuth.instance.currentUser!.uid,
-          ]),
+          'likes': FieldValue.arrayRemove([FirebaseAuth.instance.currentUser!.uid]),
         });
       } else {
         // If the user has not liked, add the like
         postRef.update({
-          'likes': FieldValue.arrayUnion([
-            FirebaseAuth.instance.currentUser!.uid,
-          ]),
+          'likes': FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
         });
       }
 
@@ -406,27 +399,22 @@ class _PostCardState extends State<PostCard> {
     if (widget.timestamp != null) {
       DateTime dateTime = widget.timestamp!.toDate();
       formattedDate =
-          '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+      '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
 
     // Safely decode the base64 profile image
     Widget profilePicWidget = ClipOval(
-      // Clip the profile picture into a circular shape
-      child:
-          widget.profilePicUrl.isNotEmpty
-              ? Image.memory(
-                base64Decode(widget.profilePicUrl),
-                height: 40,
-                width: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.person); // Default icon if image fails
-                },
-              )
-              : Icon(
-                Icons.person,
-                size: 40,
-              ), // Default avatar if no profile picture is provided
+      child: widget.profilePicUrl.isNotEmpty
+          ? Image.memory(
+        base64Decode(widget.profilePicUrl),
+        height: 45,
+        width: 45,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.person); // Default icon if image fails
+        },
+      )
+          : Icon(Icons.person, size: 45),
     );
 
     // Safely decode the base64 image for the post
@@ -436,7 +424,7 @@ class _PostCardState extends State<PostCard> {
         Uint8List decodedImage = base64Decode(widget.image);
         imageWidget = Image.memory(
           decodedImage,
-          height: 200,
+          height: 225,
           width: double.infinity,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
@@ -463,26 +451,33 @@ class _PostCardState extends State<PostCard> {
         children: [
           ListTile(
             leading: profilePicWidget, // Display profile picture
-            title: Text(widget.username),
-            subtitle: Text('${widget.location}'),
-            trailing: Text(formattedDate, style: TextStyle(fontSize: 12)),
-          ),
-          // Show post content
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+            title: Text(
+              widget.username,
+              style: GoogleFonts.montserrat(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black), // Username style
             ),
-            child: Text(widget.content, style: TextStyle(fontSize: 16)),
+            subtitle: Text(
+              '${widget.location}',
+              style: GoogleFonts.merriweather(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black), // Location style
+            ),
+            trailing: Text(
+              formattedDate,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black), // Timestamp style
+            ),
           ),
-          // Show image if available
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text(
+              widget.content,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black), // Post content style
+            ),
+          ),
           widget.image.isNotEmpty ? imageWidget : SizedBox.shrink(),
-          // Likes and interaction buttons
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                // Likes section
                 Row(
                   children: [
                     IconButton(
@@ -492,14 +487,28 @@ class _PostCardState extends State<PostCard> {
                       ),
                       onPressed: _toggleLike, // Toggle like
                     ),
-                    Text('${widget.likes} Likes'),
+                    Text(
+                      '${widget.likes} Likes',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black), // Likes text style: bold, black, weight 600
+                    ),
                   ],
                 ),
-                IconButton(
-                  icon: Icon(Icons.comment_outlined),
-                  onPressed: () {
-                    // Implement comments functionality
-                  },
+                // Custom comment image
+                SizedBox(width: 16),
+                Row(
+                  children: [
+                    // Use the custom image (comment.png) for comments
+                    IconButton(
+                      icon: Icon(Icons.comment_outlined, color: Colors.black), // Custom image as the comment icon
+                      onPressed: () {
+                        // Implement comment functionality
+                      },
+                    ),
+                    Text(
+                      '${widget.likes} Comments', // Assuming comment count is same as likes for this example
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black), // Comment count style
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -509,3 +518,5 @@ class _PostCardState extends State<PostCard> {
     );
   }
 }
+
+
