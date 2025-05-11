@@ -1,7 +1,12 @@
-allprojects {
+buildscript {
     repositories {
         google()
         mavenCentral()
+    }
+
+    dependencies {
+        // Correct classpath declaration in Kotlin DSL
+        classpath("com.android.tools.build:gradle:7.0.4")  // or the latest stable version
     }
 }
 
@@ -19,3 +24,4 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
