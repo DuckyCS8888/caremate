@@ -193,11 +193,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   return ListTile(
                     title: Text("$note at $time"),
                     subtitle: Text(formattedDate),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        _deleteNoteAndTime(_selectedDay!, index);
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.blue), // Edit icon
+                          onPressed: () {
+                            // Handle the edit functionality here
+                            _editNoteAndTime(index);
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red), // Delete icon
+                          onPressed: () {
+                            _deleteNoteAndTime(_selectedDay!, index);
+                          },
+                        ),
+                      ],
                     ),
                   );
                 },
@@ -243,7 +255,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     saveNoteToFirestore(_selectedDay!, _noteController.text, formattedTime);
 
                     DateTime reminderDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(
-                        '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} ${formattedTime}');
+                        '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} ${formattedTime}' );
 
                     NotificationHelper.scheduleNotification(
                       0,
@@ -264,7 +276,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Save button functionality
                 Navigator.pop(context); // Close the dialog
                 setState(() {
                   _currentView = 'Month'; // Switch back to the month view
@@ -388,4 +399,89 @@ class _CalendarScreenState extends State<CalendarScreen> {
       print("Error searching notes: $e");
     }
   }
+
+  void _editNoteAndTime(int index) {
+    TextEditingController _editNoteController = TextEditingController(text: dayNotes[_selectedDay]?[index]);
+    TimeOfDay? _reminderTime = TimeOfDay.now(); // Set default time if needed
+
+    // Show dialog to edit note
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Note'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // TextField for editing the note
+              TextField(
+                controller: _editNoteController,
+                decoration: InputDecoration(hintText: 'Edit your note here'),
+                maxLines: 5,
+              ),
+              SizedBox(height: 10),
+              // Time picker for editing the time
+              ElevatedButton(
+                onPressed: () async {
+                  _reminderTime = await _selectTime(context); // Select time
+                },
+                child: Text('Set Reminder Time'),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  String updatedNote = _editNoteController.text;
+
+                  // Get the formatted time from TimeOfDay
+                  String formattedTime = _reminderTime!.format(context);
+
+                  // Update the local state
+                  setState(() {
+                    dayNotes[_selectedDay]?[index] = updatedNote;
+                    reminderTimes[_selectedDay]?[index] = formattedTime;
+                  });
+
+                  // Update Firestore
+                  saveUpdatedNoteToFirestore(_selectedDay!, updatedNote, formattedTime, index);
+
+                  Navigator.pop(context); // Close the dialog
+                },
+                child: Text('Save Changes'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void saveUpdatedNoteToFirestore(DateTime selectedDay, String updatedNote, String updatedTime, int index) async {
+    String dateKey = selectedDay.toIso8601String().split('T').first;
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+
+    if (userId.isEmpty) return;
+
+    DocumentReference docRef = _firestore.collection('users').doc(userId).collection('notes').doc(dateKey);
+
+    // Get the current list of notes and times
+    List<String> notes = dayNotes[selectedDay] ?? [];
+    List<String> times = reminderTimes[selectedDay] ?? [];
+
+    // Replace the old note and time with the updated ones
+    notes[index] = updatedNote;  // Replace the old note at the given index
+    times[index] = updatedTime;  // Replace the old time at the given index
+
+    // Update Firestore with the new note and time
+    await docRef.set({
+      'notes': notes,
+      'times': times,
+    }, SetOptions(merge: true));
+  }
+
+
 }
