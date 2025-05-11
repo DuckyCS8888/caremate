@@ -619,7 +619,6 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
               onTap: () => _showRequestDetails(request),
             ),
           );
-
         },
       ),
     );

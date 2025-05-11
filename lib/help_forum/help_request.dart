@@ -92,6 +92,15 @@ class _HelpRequestPageState extends State<HelpRequestPage> {
           'userName': userName, // Store the userName fetched from Firestore
         });
 
+        // Clear the form fields after submission
+        _titleController.clear();
+        _descriptionController.clear();
+        _locationController.clear();
+        setState(() {
+          _selectedCategory = 'Groceries'; // Reset category dropdown
+          _selectedUrgency = 'Low'; // Reset urgency dropdown
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request submitted')));
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting request: $e')));
