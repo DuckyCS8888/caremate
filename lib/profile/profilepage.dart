@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:projects/screen/login.dart';
 import 'package:projects/screen/welcome_screen.dart';
 import 'edit_profile.dart'; // Edit profile page
+import 'package:projects/community/Comment.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -280,14 +281,17 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+
 // Function to show the post details in a dialog
   void _showPostDetailsDialog(DocumentSnapshot post) {
     String formattedDate = 'Unknown time';
     if (post['timestamp'] != null) {
       DateTime dateTime = post['timestamp'].toDate();
-      formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+      formattedDate =
+      '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
     }
 
+    // Initialize the image widget for the post
     Widget imageWidget = SizedBox.shrink();
     if (post['image'] != null) {
       try {
@@ -295,7 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
         imageWidget = Image.memory(
           decodedImage,
           width: double.infinity,
-          fit: BoxFit.contain, // Ensure the entire image fits within the available space
+          fit: BoxFit.contain,
         );
       } catch (e) {
         imageWidget = Container(
@@ -309,11 +313,36 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        bool isLiked = false;
+        var likeCount = post['likes'] != null && post['likes'] is List
+            ? post['likes'].length
+            : 0;
+
+        var _commentController = TextEditingController(); // Initialize the comment controller here
+
+        // Listen to real-time likes and comments updates
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(post['userID'])
+            .collection('posts')
+            .doc(post.id)
+            .snapshots()
+            .listen((snapshot) {
+          if (snapshot.exists) {
+            var data = snapshot.data() as Map<String, dynamic>;
+            List likesList = data['likes'] ?? [];
+            setState(() {
+              isLiked = likesList.contains(FirebaseAuth.instance.currentUser!.uid);
+              likeCount = likesList.length;
+            });
+          }
+        });
+
         return Dialog(
           backgroundColor: Colors.transparent, // Transparent background for dialog
           child: GestureDetector(
             onTap: () {
-              Navigator.of(context).pop(); // Close the dialog when tapped
+              Navigator.of(context).pop(); // Close the dialog when tapped outside
             },
             child: Stack(
               children: [
@@ -321,14 +350,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                     child: Container(
-                      color: Colors.transparent, // Keep this transparent to avoid the black box
+                      color: Colors.transparent,
                     ),
                   ),
                 ),
                 Center(
                   child: Container(
                     width: 800,
-                    height: 500,  // Increase the height of the dialog to fit the image
+                    height: 600, // Increase the height of the dialog to fit the image and comments
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -382,39 +411,92 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: TextStyle(fontSize: 14, color: Colors.black),
                           ),
                           SizedBox(height: 10),
-                          imageWidget, // Updated to show the full image
+                          imageWidget,
                           SizedBox(height: 10),
+                          // Likes and Comments section
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              // Like Button
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.favorite,
-                                    color: Colors.red,
+                                  IconButton(
+                                    icon: Icon(
+                                      isLiked ? Icons.favorite : Icons.favorite_border,
+                                      color: isLiked ? Colors.red : Colors.grey,
+                                    ),
+                                    onPressed: () async {
+                                      // Toggle like on this post
+                                      DocumentReference postRef = FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(post['userID'])
+                                          .collection('posts')
+                                          .doc(post.id);
+
+                                      if (isLiked) {
+                                        await postRef.update({
+                                          'likes': FieldValue.arrayRemove([FirebaseAuth.instance.currentUser!.uid]),
+                                        });
+                                      } else {
+                                        await postRef.update({
+                                          'likes': FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
+                                        });
+                                      }
+                                    },
                                   ),
-                                  SizedBox(width: 5),
                                   Text(
-                                    '${post['likes'] != null && post['likes'] is List ? post['likes'].length : 0} Likes',
+                                    '$likeCount Likes',
                                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
+                              // Comment Section
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.comment_outlined,
-                                    color: Colors.black,
+                                  IconButton(
+                                    icon: Icon(Icons.comment_outlined, color: Colors.black), // Comment icon
+                                    onPressed: () {
+                                      // Navigate to the comments screen
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ViewCommentsPage(
+                                            postID: post.id,  // Pass postId
+                                            postOwnerID: post['userID'], // Pass postOwnerID
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    '1 Comments', // Assuming 1 comment for now
-                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                  StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(post['userID'])
+                                        .collection('posts')
+                                        .doc(post.id)
+                                        .collection('comments')
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasError) {
+                                        return Text('Error loading comments');
+                                      }
+
+                                      // Count the number of documents (comments) in the collection
+                                      int commentCount = snapshot.data?.docs.length ?? 0;
+                                      return Text(
+                                        '$commentCount Comments',
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
                             ],
                           ),
+                          SizedBox(height: 10),
                         ],
                       ),
                     ),
@@ -427,18 +509,39 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(
-          "Profile Page",
-          style: GoogleFonts.comicNeue(
-            fontSize: 25,
-            fontWeight: FontWeight.w900,
-            color: Colors.deepOrange,
-          ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Profile Page",
+              style: GoogleFonts.comicNeue(
+                fontSize: 25,
+                fontWeight: FontWeight.w900,
+                color: Colors.deepOrange,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _logOut, // Log out function
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.black,
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Icon(
+                Icons.exit_to_app,  // Exit icon
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.white,
       ),
@@ -574,24 +677,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: _logOut,
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      backgroundColor: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Log Out',
-                      style: GoogleFonts.comicNeue(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
@@ -640,6 +725,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  void _addComment(String id) {}
 }
 
 void main() {
