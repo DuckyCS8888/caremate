@@ -8,14 +8,16 @@ import 'help_request.dart';
 import 'profile/profilepage.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final int selectedIndex;  // Accept selectedIndex from other pages (default is 0)
+
+  const MainPage({super.key, this.selectedIndex = 0});  // Default to 0 for CommunityPage
 
   @override
   _MainPageState createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;  // Track selected navigation item
+  late int _selectedIndex;  // Track selected navigation item
 
   // Define the list of pages to navigate to
   static final List<Widget> _pages = <Widget>[
@@ -23,8 +25,14 @@ class _MainPageState extends State<MainPage> {
     CalendarScreen(),       // Calendar page
     FirstAidPage(),         // First Aid page
     HelpRequestPage(),      // Help Request page
-    ProfilePage(),
+    ProfilePage(),          // Profile page
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;  // Set selectedIndex from the passed value
+  }
 
   void _onItemTapped(int index) {
     setState(() {

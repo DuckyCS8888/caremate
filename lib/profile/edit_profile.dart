@@ -1,17 +1,17 @@
+import 'dart:convert'; // For base64 encoding/decoding
+import 'dart:typed_data'; // For Uint8List
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:projects/profile/profilepage.dart';
+import 'package:projects/home.dart'; // MainPage where bottom navigation is defined
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:convert'; // For base64 encoding // ProfilePage to navigate after save
 
 class EditProfilePage extends StatefulWidget {
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 }
-//testing
+
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   TextEditingController _usernameController = TextEditingController();
@@ -24,7 +24,49 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Uint8List? _selectedImage;
   bool _isImagePicked = false;
 
-  // Function to pick the image
+  // To store the previous profile picture data (base64)
+  String _previousProfilePicBase64 = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Load user data when the page is initialized
+  }
+
+  // Function to load current user data from Firestore
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Fetch user data from Firestore
+        DocumentReference userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+        DocumentSnapshot snapshot = await userDocRef.get();
+
+        if (snapshot.exists) {
+          var data = snapshot.data() as Map<String, dynamic>;
+
+          setState(() {
+            // Pre-populate the form fields with the current data
+            _usernameController.text = data['username'] ?? '';
+            _jobController.text = data['job'] ?? '';
+            _bioController.text = data['bio'] ?? '';
+            _contactController.text = data['contact'] ?? '';
+            _previousProfilePicBase64 = data['profilePic'] ?? ''; // Store the profile picture base64 string
+
+            // Decode the profile picture if available
+            if (_previousProfilePicBase64.isNotEmpty) {
+              _selectedImage = base64Decode(_previousProfilePicBase64);
+              _isImagePicked = true;
+            }
+          });
+        }
+      } catch (e) {
+        print('Error loading user data: $e');
+      }
+    }
+  }
+
+  // Function to pick the image from gallery
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -69,17 +111,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
           'job': _jobController.text.trim(),
           'bio': _bioController.text.trim(),
           'contact': _contactController.text.trim(),
-          'profilePic': profilePicBase64.isEmpty ? user.photoURL : profilePicBase64, // Save base64 or default photo URL
+          'profilePic': profilePicBase64.isEmpty ? _previousProfilePicBase64 : profilePicBase64, // Use previous profile picture if not updated
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Profile Updated Successfully!')),
         );
 
-        // Navigate back to ProfilePage and refresh the data
+        // Navigate back to MainPage and set selectedIndex to 4 (ProfilePage)
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate back to ProfilePage
+          MaterialPageRoute(builder: (context) => MainPage(selectedIndex: 4)), // Pass selectedIndex 4 for ProfilePage
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +152,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     backgroundColor: Colors.grey[300],
                     backgroundImage: _isImagePicked
                         ? MemoryImage(_selectedImage!)
-                        : AssetImage('assets/images/default_profile.png') as ImageProvider,
+                        : (_previousProfilePicBase64.isNotEmpty
+                        ? MemoryImage(base64Decode(_previousProfilePicBase64))
+                        : AssetImage('assets/images/default_profile.png')) as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 20),
