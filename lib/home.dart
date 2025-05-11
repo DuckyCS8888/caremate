@@ -1,7 +1,7 @@
 import 'dart:core';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'CalendarScreenState.dart';
+import 'calendar/CalendarScreenState.dart';
 import 'community/community.dart';
 import 'first_aid/first_aid.dart';
 import 'help_request.dart';

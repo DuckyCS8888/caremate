@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart'; // Import intl package for formatting date
+import 'package:projects/calendar/notification_helper.dart';  // Import your Notification Helper
+import 'package:permission_handler/permission_handler.dart';  // Import permission handler
 
 class CalendarScreen extends StatefulWidget {
   @override
@@ -25,9 +27,50 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<String>> dayNotes = {}; // Stores notes for each day
   Map<DateTime, List<String>> reminderTimes = {}; // Stores reminder times for each day as Strings
+  List<Map<String, dynamic>> _reminders = []; // List to store reminders
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    requestNotificationPermission(); // Request notification permission
+    NotificationHelper.initializeNotification(); // Initialize notifications
+    _loadReminders(); // Load reminders from Firestore
+  }
+
+  // Request notification permission using permission handler
+  Future<void> requestNotificationPermission() async {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+  }
+
+  // Load reminders from Firestore (you can customize this as per your need)
+  void _loadReminders() async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+    if (userId.isEmpty) {
+      print("No user logged in.");
+      return;
+    }
+
+    try {
+      // Example: Fetch reminders for the logged-in user
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notes')
+          .get();
+
+      snapshot.docs.forEach((doc) {
+        print("Reminder: ${doc.data()}");
+        // You can store these reminders as needed, e.g., in a list or map
+      });
+    } catch (e) {
+      print("Error loading reminders: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +258,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     // Save data to Firestore
                     saveNoteToFirestore(_selectedDay!, _noteController.text, formattedTime);
 
+                    // Schedule the notification
+                    DateTime reminderDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(
+                        '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} ${formattedTime}');
+
+                    NotificationHelper.scheduleNotification(
+                      0, // Notification ID (can be unique per reminder)
+                      'Reminder', // Title
+                      _noteController.text, // Note text
+                      reminderDateTime, // Time for notification
+                    );
+
                     Navigator.pop(context); // Close the dialog
                   }
                 },
@@ -328,13 +382,5 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       print('Error deleting note: $e');
     }
-  }
-
-  String _monthName(int month) {
-    const List<String> months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[month - 1];
   }
 }
