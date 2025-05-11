@@ -81,6 +81,52 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Function to delete the post
+  void _deletePost(String postId) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        await _firestore.collection('users').doc(user.uid).collection('posts').doc(postId).delete();
+        // Reload the posts after deletion
+        _loadUserPosts();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Post deleted successfully')));
+      } catch (e) {
+        print('Error deleting post: $e');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting post')));
+      }
+    }
+  }
+
+  // Function to show the delete confirmation dialog
+  void _showDeleteConfirmationDialog(String postId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Post?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deletePost(postId); // Delete the post
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
   // Function to display the full profile picture with a blurred background
   void _showFullProfilePic(BuildContext context) {
     if (_profilePic != null) {
@@ -328,7 +374,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
 
-              // Display posts in GridView
+              /// Display posts in GridView
               SizedBox(height: 20),  // Add spacing between buttons and post images
               GridView.builder(
                 shrinkWrap: true,
@@ -341,13 +387,30 @@ class _ProfilePageState extends State<ProfilePage> {
                 itemBuilder: (context, index) {
                   String imageUrl = _userPosts[index]['image']; // Assuming the post has an 'image' field
 
-                  return Image.memory(
-                    base64Decode(imageUrl),
-                    fit: BoxFit.cover,
+                  return Stack(
+                    children: [
+                      // The image is displayed here, but no navigation happens
+                      GestureDetector(
+                        child: Image.memory(
+                          base64Decode(imageUrl),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            // Show delete confirmation dialog
+                            _showDeleteConfirmationDialog(_userPosts[index].id);
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
-
               SizedBox(height: 20),
             ],
           ),
