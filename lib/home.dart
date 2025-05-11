@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'calendar/CalendarScreenState.dart';
 import 'community/community.dart';
 import 'first_aid/first_aid.dart';
-import 'help_request.dart';
+import 'help_forum.dart';
 import 'profile/profilepage.dart';
 
 class MainPage extends StatefulWidget {
@@ -24,7 +24,7 @@ class _MainPageState extends State<MainPage> {
     CommunityForum(),       // Community page
     CalendarScreen(),       // Calendar page
     FirstAidPage(),         // First Aid page
-    HelpRequestPage(),      // Help Request page
+    HelpForumPage(),      // Help Request page
     ProfilePage(),          // Profile page
   ];
 
