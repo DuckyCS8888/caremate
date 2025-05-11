@@ -3,6 +3,7 @@ import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';  // Import the intl package for date formatting
 
 class ViewCommentsPage extends StatefulWidget {
   final String postID; // Post ID passed from the previous page
@@ -181,8 +182,8 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                     title: Text(comment['username']),
                     subtitle: Text(comment['comment']),
                     trailing: Text(
-                      // Format the timestamp (if needed)
-                      '${(comment['timestamp'] as Timestamp).toDate()}',
+                      // Format the timestamp to show date and time in the required format
+                      DateFormat('M/d/yyyy HH:mm').format((comment['timestamp'] as Timestamp).toDate()),
                       style: TextStyle(fontSize: 12),
                     ),
                     // Delete button (only for the commenter)
