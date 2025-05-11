@@ -25,8 +25,8 @@ class WelcomeScreen extends StatelessWidget {
               children: [
                 // Logo
                 Container(
-                  width: 250,
-                  height: 250,
+                  width: 300,
+                  height: 300,
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage(
@@ -41,11 +41,11 @@ class WelcomeScreen extends StatelessWidget {
                 ), // Space between the logo and the welcome text
                 // Welcome Text
                 Text(
-                  'Welcome to Caremate',
+                  'Caremate',
                   style: GoogleFonts.comicNeue(
                     fontSize: 40,
                     fontWeight: FontWeight.w900, // Replace with your desired font family
-                    color: Colors.black,
+                    color: Colors.deepOrange,
                   ),
                 ),
                 const SizedBox(

@@ -88,7 +88,16 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Beige color
-      appBar: AppBar(title: Text('Login'), backgroundColor: Colors.orange),
+      appBar: AppBar(title: Text(
+        "Login",
+        style: GoogleFonts.comicNeue(
+        fontSize: 30,
+        fontWeight:
+        FontWeight.w700, // Replace with your desired font family
+        color: Colors.orange,
+    ),
+    ),
+    backgroundColor: Colors.white),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
