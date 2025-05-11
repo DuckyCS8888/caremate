@@ -45,31 +45,103 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: _pages[_selectedIndex],  // Display selected page
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.group),
+            icon: _selectedIndex == 0
+                ? Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                  Icons.group,
+                  color: Colors.white,
+                  size: 23),
+            )
+                : Icon(Icons.group,
+                color: Colors.grey,
+                size: 20),
             label: 'Community',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
+            icon: _selectedIndex == 1
+                ? Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                  Icons.calendar_today,
+                  color: Colors.white,
+                  size: 23),
+            )
+                : Icon(Icons.calendar_today,
+                color: Colors.grey,
+                size: 20),
             label: 'Calendar',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.medical_services),
+            icon: _selectedIndex == 2
+                ? Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                  Icons.medical_services,
+                  color: Colors.white,
+                  size: 45),
+            )
+                : Icon(
+                Icons.medical_services,
+                color: Colors.red,
+                size: 45),
             label: 'First Aid',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.help),
+            icon: _selectedIndex == 3
+                ? Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,  // Selected background red
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                  Icons.help,
+                  color: Colors.white,
+                  size: 23),
+            )
+                : Icon(Icons.help,
+                color: Colors.grey,
+                size: 20),
             label: 'Help Request',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: _selectedIndex == 4
+                ? Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 23),
+            )
+                : Icon(Icons.person,
+                color: Colors.grey,
+                size: 20),
             label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepOrange,
+        selectedItemColor: Colors.white,  // Set selected item color to white
         unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.transparent,  // Remove background color to keep container background visible
         showSelectedLabels: false,
         showUnselectedLabels: false,
         onTap: _onItemTapped,  // Handle item taps

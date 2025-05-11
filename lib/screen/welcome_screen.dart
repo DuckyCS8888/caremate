@@ -40,14 +40,6 @@ class WelcomeScreen extends StatelessWidget {
                   height: 20,
                 ), // Space between the logo and the welcome text
                 // Welcome Text
-                Text(
-                  'Caremate',
-                  style: GoogleFonts.comicNeue(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900, // Replace with your desired font family
-                    color: Colors.deepOrange,
-                  ),
-                ),
                 const SizedBox(
                   height: 40,
                 ), // Space between the welcome text and buttons

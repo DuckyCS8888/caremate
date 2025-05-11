@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../home.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -45,7 +46,11 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
     if (user != null) {
       if (!_formKey.currentState!.validate() || !_isImagePicked) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please fill all fields correctly and pick a profile picture')),
+          SnackBar(
+            content: Text(
+              'Please fill all fields correctly and pick a profile picture',
+            ),
+          ),
         );
         return;
       }
@@ -63,9 +68,9 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
           'profilePic': base64Image,
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile Saved Successfully!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Profile Saved Successfully!')));
 
         Navigator.pushReplacement(
           context,
@@ -83,9 +88,18 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text('Complete Your Profile'),
-          backgroundColor: Colors.orange),
+        automaticallyImplyLeading: false,
+        title: Text(
+          "Complete Your Profile Setup ",
+          style: GoogleFonts.comicNeue(
+            fontSize: 26,
+            fontWeight:
+            FontWeight.w700, // Replace with your desired font family
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.orange,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: SingleChildScrollView(
@@ -97,9 +111,11 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage: _isImagePicked
-                        ? MemoryImage(_selectedImage!)
-                        : AssetImage("assets/images/defaultpfp.png") as ImageProvider,
+                    backgroundImage:
+                        _isImagePicked
+                            ? MemoryImage(_selectedImage!)
+                            : AssetImage("assets/images/defaultpfp.png")
+                                as ImageProvider,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -107,7 +123,20 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                 // Username
                 TextFormField(
                   controller: _usernameController,
-                  decoration: InputDecoration(labelText: 'Username'),
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    hintText: 'Enter your username',
+                    hintStyle: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Username is required';
@@ -123,7 +152,20 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                 TextFormField(
                   controller: _contactController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: 'Contact Number'),
+                  decoration: InputDecoration(
+                    labelText: 'Contact Number',
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    hintText: 'Enter your contact number',
+                    hintStyle: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Contact number is required';
@@ -138,7 +180,19 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                 // Job
                 TextFormField(
                   controller: _jobController,
-                  decoration: InputDecoration(labelText: 'Job'),
+                  decoration: InputDecoration(
+                      labelText: 'Job',
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    hintText: 'Enter your Job',
+                    hintStyle: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ),),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Job is required';
@@ -151,7 +205,19 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                 // Bio
                 TextFormField(
                   controller: _bioController,
-                  decoration: InputDecoration(labelText: 'Bio'),
+                  decoration: InputDecoration(
+                      labelText: 'Bio',
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    hintText: 'Enter your Bio',
+                    hintStyle: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
+                    ),),
                   maxLines: 3,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -167,13 +233,23 @@ class _ProfileSetupState extends State<ProfileSetupPage> {
                 ElevatedButton(
                   onPressed: _saveProfile,
                   style: ElevatedButton.styleFrom(
-                    fixedSize: Size(MediaQuery.of(context).size.width * 0.7, 50),
+                    fixedSize: Size(
+                      MediaQuery.of(context).size.width * 0.7,
+                      50,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                     backgroundColor: Colors.orange,
                   ),
-                  child: Text('Save Profile'),
+                  child: Text(
+                      'Save Profile',
+                    style: GoogleFonts.comicNeue(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  bool _isPasswordVisible = false;  // Track visibility of the password
+  bool _isPasswordVisible = false; // Track visibility of the password
 
   // Function for login
   Future<void> _login() async {
@@ -33,26 +33,32 @@ class _LoginPageState extends State<LoginPage> {
           password: _passwordController.text.trim(),
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Successful!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login Successful!')));
 
         // Fetch user document
-        DocumentSnapshot userDoc = await _firestore
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .get();
+        DocumentSnapshot userDoc =
+            await _firestore
+                .collection('users')
+                .doc(userCredential.user!.uid)
+                .get();
 
         if (userDoc.exists && userDoc.data() != null) {
           var data = userDoc.data() as Map<String, dynamic>;
 
           // Check if profile is complete
           bool isProfileComplete =
-              data['username'] != null && data['username'].toString().isNotEmpty &&
-                  data['contact'] != null && data['contact'].toString().isNotEmpty &&
-                  data['profilePic'] != null && data['profilePic'].toString().isNotEmpty &&
-                  data['job'] != null && data['job'].toString().isNotEmpty &&
-                  data['bio'] != null && data['bio'].toString().isNotEmpty;
+              data['username'] != null &&
+              data['username'].toString().isNotEmpty &&
+              data['contact'] != null &&
+              data['contact'].toString().isNotEmpty &&
+              data['profilePic'] != null &&
+              data['profilePic'].toString().isNotEmpty &&
+              data['job'] != null &&
+              data['job'].toString().isNotEmpty &&
+              data['bio'] != null &&
+              data['bio'].toString().isNotEmpty;
 
           if (isProfileComplete) {
             Navigator.pushReplacement(
@@ -77,9 +83,9 @@ class _LoginPageState extends State<LoginPage> {
           SnackBar(content: Text('Authentication Error: ${e.message}')),
         );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -88,16 +94,21 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, // Beige color
-      appBar: AppBar(title: Text(
-        "Login",
-        style: GoogleFonts.comicNeue(
-        fontSize: 30,
-        fontWeight:
-        FontWeight.w700, // Replace with your desired font family
-        color: Colors.orange,
-    ),
-    ),
-    backgroundColor: Colors.white),
+      appBar: AppBar(
+        iconTheme: IconThemeData(
+          color: Colors.white, // Change the color of the back arrow here
+        ),
+        title: Text(
+          "Login",
+          style: GoogleFonts.comicNeue(
+            fontSize: 30,
+            fontWeight:
+                FontWeight.w700, // Replace with your desired font family
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.orange,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -152,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                 // Password TextField with Eye Icon for visibility toggle
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: !_isPasswordVisible,  // Toggle visibility
+                  obscureText: !_isPasswordVisible, // Toggle visibility
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: GoogleFonts.poppins(
@@ -168,12 +179,15 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.orange,
                       ),
                       onPressed: () {
                         setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;  // Toggle password visibility
+                          _isPasswordVisible =
+                              !_isPasswordVisible; // Toggle password visibility
                         });
                       },
                     ),

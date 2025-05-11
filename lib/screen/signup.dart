@@ -73,7 +73,21 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: Text('Sign Up'), backgroundColor: Colors.orange),
+      appBar: AppBar(
+        iconTheme: IconThemeData(
+          color: Colors.white, // Change the color of the back arrow here
+        ),
+        title: Text(
+          "Sign Up",
+          style: GoogleFonts.comicNeue(
+            fontSize: 30,
+            fontWeight:
+            FontWeight.w700, // Replace with your desired font family
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.orange,
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
