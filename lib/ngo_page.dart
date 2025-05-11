@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'ngo_details.dart';
 
 class NGOPage extends StatelessWidget {
@@ -10,55 +11,66 @@ class NGOPage extends StatelessWidget {
       'name': 'Fund',
       'images': 'assets/images/fund.png',
       'link': 'https://www.fundsforngos.org/',
-      'description': 'This service provides funding to underprivileged communities, supporting various development programs, including healthcare, education, and infrastructure projects.'
+      'description':
+          'This service provides funding to underprivileged communities, supporting various development programs, including healthcare, education, and infrastructure projects.',
     },
     {
       'name': 'Food',
       'images': 'assets/images/food.png',
       'link': 'https://foodaidfoundation.org/',
-      'description': 'Provides emergency food supplies to families and individuals in need, ensuring that no one goes hungry during times of crisis or poverty.'
+      'description':
+          'Provides emergency food supplies to families and individuals in need, ensuring that no one goes hungry during times of crisis or poverty.',
     },
     {
       'name': 'Health',
       'images': 'assets/images/health.png',
       'link': 'https://ngobase.org/cwa/MY/HLT/health-ngos-charities-malaysia',
-      'description': 'Our health services focus on providing free medical care, including vaccinations, health screenings, and treatment for various diseases.'
+      'description':
+          'Our health services focus on providing free medical care, including vaccinations, health screenings, and treatment for various diseases.',
     },
     {
       'name': 'Education',
       'images': 'assets/images/education.png',
-      'link': 'https://ngobase.org/cwa/MY/EDU/education-and-training-ngos-charities-malaysia',
-      'description': 'Education is a powerful tool for empowerment. We provide educational support, including scholarships, tutoring, and school supplies to disadvantaged students.'
+      'link':
+          'https://ngobase.org/cwa/MY/EDU/education-and-training-ngos-charities-malaysia',
+      'description':
+          'Education is a powerful tool for empowerment. We provide educational support, including scholarships, tutoring, and school supplies to disadvantaged students.',
     },
     {
       'name': 'Shelter',
       'images': 'assets/images/shelter.png',
       'link': 'https://www.shelterhome.org/',
-      'description': 'We provide temporary shelter and basic amenities to homeless individuals, offering a safe and comfortable environment to rebuild their lives.'
+      'description':
+          'We provide temporary shelter and basic amenities to homeless individuals, offering a safe and comfortable environment to rebuild their lives.',
     },
     {
       'name': 'Disability Support',
       'images': 'assets/images/disability_support.png',
       'link': 'https://ngobase.org/cswa/MY/HLT.DS/disability-support-malaysia',
-      'description': 'We offer a range of support services for individuals with disabilities, including mobility aids, therapy, and resources for living independently.'
+      'description':
+          'We offer a range of support services for individuals with disabilities, including mobility aids, therapy, and resources for living independently.',
     },
     {
       'name': 'Disaster Relief',
       'images': 'assets/images/disaster_relief.png',
       'link': 'https://mercy.org.my/',
-      'description': 'In the wake of natural disasters, we provide emergency relief, including food, water, medical aid, and shelter to affected populations.'
+      'description':
+          'In the wake of natural disasters, we provide emergency relief, including food, water, medical aid, and shelter to affected populations.',
     },
     {
       'name': 'Legal Aid',
       'images': 'assets/images/legal_aid.png',
-      'link': 'https://www.ngosource.org/blog/ngos-providing-pro-bono-legal-services',
-      'description': 'Our legal aid services assist those who cannot afford legal representation, helping them navigate complex legal systems and protect their rights.'
+      'link':
+          'https://www.ngosource.org/blog/ngos-providing-pro-bono-legal-services',
+      'description':
+          'Our legal aid services assist those who cannot afford legal representation, helping them navigate complex legal systems and protect their rights.',
     },
     {
       'name': 'Employment',
       'images': 'assets/images/employment_assistance.png',
       'link': 'https://www.indeed.com/q-ngo-program-assistant-jobs.html',
-      'description': 'We provide job training, resume building, and job placement assistance to individuals looking to re-enter the workforce after a period of unemployment.'
+      'description':
+          'We provide job training, resume building, and job placement assistance to individuals looking to re-enter the workforce after a period of unemployment.',
     },
   ];
 
@@ -66,9 +78,18 @@ class NGOPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('NGO Services'),
-        backgroundColor: Colors.orange,
+        title: Text(
+          'NGO Services',
+          style: GoogleFonts.comicNeue(
+            fontSize: 26,
+            fontWeight:
+            FontWeight.w900, // Replace with your desired font family
+            color: Colors.deepOrange,
+          ),
+        ),
+        backgroundColor: Colors.white,
       ),
+      backgroundColor: Colors.white,
       body: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
@@ -84,11 +105,12 @@ class NGOPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => NGODetailPage(
-                    title: ngo['name']!,
-                    link: ngo['link']!,
-                    description: ngo['description']!,
-                  ),
+                  builder:
+                      (context) => NGODetailPage(
+                        title: ngo['name']!,
+                        link: ngo['link']!,
+                        description: ngo['description']!,
+                      ),
                 ),
               );
             },
@@ -108,7 +130,9 @@ class NGOPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.3),  // Specify opacity using .withValues()
+                          color: Colors.grey.withValues(
+                            alpha: 0.3,
+                          ), // Specify opacity using .withValues()
                           spreadRadius: 2,
                           blurRadius: 5,
                           offset: Offset(0, 3),

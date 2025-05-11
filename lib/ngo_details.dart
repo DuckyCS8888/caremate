@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';  // Import the url_launcher package
 
 class NGODetailPage extends StatelessWidget {
@@ -19,9 +20,13 @@ class NGODetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           title,
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.orange,
+        style: GoogleFonts.comicNeue(
+        fontSize: 26,
+        fontWeight:
+        FontWeight.w900, // Replace with your desired font family
+        color: Colors.deepOrange,
+        ),),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'first_aid_detail.dart';
 
@@ -44,10 +45,19 @@ class FirstAidPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Essential First Aid'),
-        backgroundColor: Colors.orange,
-        elevation: 0, // Remove AppBar shadow for a cleaner look
+        title: Text(
+          "Essential First Aid",
+          style: GoogleFonts.comicNeue(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            color: Colors.deepOrange,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
+      backgroundColor: Colors.white,
+      // Set the background color of the entire screen to white
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -68,10 +78,11 @@ class FirstAidPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FirstAidDetailPage(
-                            name: item.name,
-                            imagePath: item.imagePath,
-                          ),
+                          builder: (context) =>
+                              FirstAidDetailPage(
+                                name: item.name,
+                                imagePath: item.imagePath,
+                              ),
                         ),
                       );
                     },
@@ -123,35 +134,49 @@ class FirstAidPage extends StatelessWidget {
             ),
             // SOS Button
             Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: GestureDetector(
-                onTap: _openDialer,
-                child: Container(
-                  width: 100.0,
-                  height: 100.0,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.red, Colors.redAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4.0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'SOS',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _openDialer,
+                    child: Container(
+                      width: 90.0,
+                      height: 90.0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red, Colors.redAccent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 4.0),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'SOS',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(height: 2.0), // Add some space between the SOS button and the "Emergency Call" text
+                  Text(
+                    'Emergency Call',
+                    style: TextStyle(
+                      color: Colors.black, // Set text color
+                      fontSize: 10.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
+
           ],
         ),
       ),
