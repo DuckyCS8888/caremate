@@ -129,7 +129,7 @@ class _EditRequestPageState extends State<EditRequestPage> {
         backgroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: Icon(Icons.edit_note),
             onPressed: () {},
           ),
         ],

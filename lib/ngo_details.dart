@@ -28,6 +28,7 @@ class NGODetailPage extends StatelessWidget {
         ),),
         backgroundColor: Colors.white,
       ),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(

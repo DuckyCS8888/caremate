@@ -15,6 +15,7 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
   List<DocumentSnapshot> _requests = [];
   bool _loading = true;
   String _filterStatus = 'unaccepted'; // Default filter for unaccepted requests
+  int _totalRequests = 0;
 
   @override
   void initState() {
@@ -37,6 +38,7 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
 
       setState(() {
         _requests = querySnapshot.docs;
+        _totalRequests = _requests.length;
         _loading = false;
       });
     } catch (e) {
@@ -191,30 +193,59 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
         return;
       }
 
-      // Delete the request from Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('requests')
-          .doc(requestId)
-          .delete()
-          .then((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Request deleted successfully')),
-            );
-            _fetchRequests(); // Refresh the request list after deletion
-          })
-          .catchError((e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error deleting request: $e')),
-            );
-          });
+      // Show delete confirmation dialog
+      bool? confirmDelete = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Confirm Deletion'),
+            content: Text('Are you sure you want to delete this request?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false); // User cancelled the deletion
+                },
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true); // User confirmed the deletion
+                },
+                child: Text('Delete'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // Proceed to delete if user confirmed
+      if (confirmDelete == true) {
+        // Delete the request from Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('requests')
+            .doc(requestId)
+            .delete()
+            .then((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Request deleted successfully')),
+          );
+          _fetchRequests(); // Refresh the request list after deletion
+        })
+            .catchError((e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting request: $e')),
+          );
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error deleting request: $e')));
     }
   }
+
 
   // Show request details in a dialog
   void _showRequestDetails(DocumentSnapshot request) {
@@ -396,6 +427,7 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -407,7 +439,7 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
             color: Colors.deepOrange,
           ),
         ),
-        backgroundColor: Colors.white, // Set background color to white
+        backgroundColor: Colors.white,
         elevation: 0, // Remove shadow for a flat white background
         actions: [
           Padding(
@@ -435,147 +467,160 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Center(
+              child: Text(
+                'Total: $_totalRequests', // Display total requests count
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepOrange,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       backgroundColor: Colors.white,
-      body:
-          _loading
-              ? Center(child: CircularProgressIndicator())
-              : _requests.isEmpty
-              ? Center(
-                child: Text(
-                  'No ${_filterStatus} requests available.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
-              : ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                itemCount: _requests.length,
-                itemBuilder: (context, index) {
-                  var request = _requests[index];
-                  bool isHighUrgency = request['urgency'] == 'High';
-                  bool isOwnRequest =
-                      request['userId'] ==
-                      FirebaseAuth.instance.currentUser?.uid;
-                  bool volunteerAccepted =
-                      request['volunteerAccepted'] ?? false;
+      body: _loading
+          ? Center(child: CircularProgressIndicator())
+          : _requests.isEmpty
+          ? Center(
+        child: Text(
+          'No ${_filterStatus} requests available.',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      )
+          : ListView.builder(
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        itemCount: _requests.length,
+        itemBuilder: (context, index) {
+          var request = _requests[index];
+          bool isHighUrgency = request['urgency'] == 'High';
+          bool isOwnRequest = request['userId'] == FirebaseAuth.instance.currentUser?.uid;
+          bool volunteerAccepted = request['volunteerAccepted'] ?? false;
 
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    elevation: 8,
-                    margin: EdgeInsets.only(bottom: 12),
-                    color:
-                        isHighUrgency
-                            ? Colors.red[50]
-                            : volunteerAccepted
-                            ? Colors.green[50]
-                            : Colors.white,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      leading: CircleAvatar(
-                        backgroundColor:
-                            volunteerAccepted
-                                ? Colors.green
-                                : Colors.orangeAccent,
-                        child: Icon(
-                          Icons.volunteer_activism,
-                          color: Colors.white,
-                        ),
-                      ),
-                      title: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  request['title'],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'By: ${request['userName'] ?? 'Unknown'}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (isOwnRequest)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: Chip(
-                                label: Text(
-                                  'OWN',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: Colors.blue,
-                              ),
-                            ),
-                        ],
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 8),
-                          Text('Category: ${request['category']}'),
-                          Text('Urgency: ${request['urgency']}'),
-                        ],
-                      ),
-                      trailing:
-                          volunteerAccepted
-                              ? IconButton(
-                                icon: Icon(
-                                  Icons.cancel_outlined,
-                                  color: Colors.red,
-                                ),
-                                onPressed:
-                                    () => _cancelRequest(
-                                      request.id,
-                                      request['userId'],
-                                    ),
-                              )
-                              : isOwnRequest // Show Edit button if it's the user's own request
-                              ? IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  // Navigate to the EditRequestPage
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => EditRequestPage(
-                                            requestId: request.id,
-                                            currentTitle: request['title'],
-                                            currentDescription:
-                                                request['description'],
-                                            currentCategory:
-                                                request['category'],
-                                            currentUrgency: request['urgency'],
-                                          ),
-                                    ),
-                                  );
-                                },
-                              )
-                              : Icon(
-                                Icons.info_outline,
-                                color: Colors.blueGrey,
-                              ),
-                      onTap: () => _showRequestDetails(request),
-                    ),
-                  );
-                },
+          return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            elevation: 8,
+            margin: EdgeInsets.only(bottom: 12),
+            color: isHighUrgency
+                ? Colors.red[50]
+                : volunteerAccepted
+                ? Colors.green[50]
+                : Colors.white,
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
               ),
+              leading: CircleAvatar(
+                backgroundColor: volunteerAccepted
+                    ? Colors.green
+                    : Colors.orangeAccent,
+                child: Icon(
+                  Icons.volunteer_activism,
+                  color: Colors.white,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          request['title'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'By: ${request['userName'] ?? 'Unknown'}',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isOwnRequest)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Chip(
+                        label: Text(
+                          'OWN',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.blue,
+                      ),
+                    ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 8),
+                  Text('Category: ${request['category']}'),
+                  Text('Urgency: ${request['urgency']}'),
+                ],
+              ),
+              trailing: volunteerAccepted
+                  ? IconButton(
+                icon: Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.red,
+                ),
+                onPressed: () => _cancelRequest(request.id, request['userId']),
+              )
+                  : isOwnRequest // Show Delete and Edit buttons if it's the user's own request
+                  ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Edit Button
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      // Navigate to the EditRequestPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditRequestPage(
+                            requestId: request.id,
+                            currentTitle: request['title'],
+                            currentDescription: request['description'],
+                            currentCategory: request['category'],
+                            currentUrgency: request['urgency'],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Delete Button
+                  IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      // Trigger delete with confirmation
+                      _deleteRequest(request.id, request['userId']);
+                    },
+                  ),
+                ],
+              )
+                  : Icon(
+                Icons.info_outline,
+                color: Colors.blueGrey,
+              ),
+              onTap: () => _showRequestDetails(request),
+            ),
+          );
+        },
+      ),
     );
   }
 }
