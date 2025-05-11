@@ -251,8 +251,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       _noteController.text,
                       reminderDateTime,
                     );
-
-                    Navigator.pop(context);
                   }
                 },
                 child: Text('Set Reminder'),
@@ -260,7 +258,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Save button functionality
+                Navigator.pop(context); // Close the dialog
+                setState(() {
+                  _currentView = 'Month'; // Switch back to the month view
+                });
+              },
+              child: Text('Save'),
+            ),
           ],
         );
       },
