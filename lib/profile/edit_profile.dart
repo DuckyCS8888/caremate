@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:projects/home.dart'; // MainPage where bottom navigation is defined
 import 'dart:io';
+import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 
 class EditProfilePage extends StatefulWidget {
   @override
@@ -116,6 +117,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Profile Updated Successfully!')),
+
         );
 
         // Navigate back to MainPage and set selectedIndex to 4 (ProfilePage)
@@ -126,6 +128,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error updating profile: ${e.toString()}')),
+
         );
       }
     }
@@ -135,8 +138,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Edit Profile", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.orange,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Back to the ProfilePage when arrow is clicked
+          },
+        ),
+        title: Text(
+          "Edit Profile",
+          style: GoogleFonts.comicNeue(
+            fontSize: 25,
+            fontWeight: FontWeight.w900,
+            color: Colors.deepOrange,
+          ),
+        ),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -162,7 +178,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Username Field
                 TextFormField(
                   controller: _usernameController,
-                  decoration: InputDecoration(labelText: 'Username'),
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    labelStyle: GoogleFonts.comicNeue(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                    errorStyle: GoogleFonts.comicNeue(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  style: GoogleFonts.comicNeue(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your username';
@@ -175,7 +208,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Job Field
                 TextFormField(
                   controller: _jobController,
-                  decoration: InputDecoration(labelText: 'Job'),
+                  decoration: InputDecoration(
+                    labelText: 'Job',
+                    labelStyle: GoogleFonts.comicNeue(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                    errorStyle: GoogleFonts.comicNeue(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  style: GoogleFonts.comicNeue(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your job';
@@ -188,7 +238,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Bio Field
                 TextFormField(
                   controller: _bioController,
-                  decoration: InputDecoration(labelText: 'Bio'),
+                  decoration: InputDecoration(
+                    labelText: 'Bio',
+                    labelStyle: GoogleFonts.comicNeue(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                    errorStyle: GoogleFonts.comicNeue(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  style: GoogleFonts.comicNeue(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your bio';
@@ -201,7 +268,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 // Contact Number Field
                 TextFormField(
                   controller: _contactController,
-                  decoration: InputDecoration(labelText: 'Contact Number'),
+                  decoration: InputDecoration(
+                    labelText: 'Contact Number',
+                    labelStyle: GoogleFonts.comicNeue(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                    errorStyle: GoogleFonts.comicNeue(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  style: GoogleFonts.comicNeue(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your contact number';
@@ -210,6 +294,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   },
                 ),
                 SizedBox(height: 20),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -220,22 +305,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.black, backgroundColor: Colors.orange,
+                        foregroundColor: Colors.black,
+                        backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text("Save Changes"),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},  // No function for this button
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.black, backgroundColor: Colors.orange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      child: Text(
+                        "Save Changes",
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
-                      child: Text("Log Out"),
                     ),
                   ],
                 ),
