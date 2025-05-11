@@ -1,10 +1,13 @@
-import 'dart:convert'; // For base64Decode
+import 'dart:convert'; // For base64 encoding/decoding
 import 'dart:typed_data'; // For Uint8List
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:projects/screen/login.dart';
+import 'package:projects/screen/welcome_screen.dart';
 import 'edit_profile.dart'; // Edit profile page
-import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -20,11 +23,15 @@ class _ProfilePageState extends State<ProfilePage> {
   String _bio = '';
   String _profilePicUrl = ''; // Profile picture URL as base64 string
   Uint8List? _profilePic; // To hold decoded image data
+  int _postCount = 0;  // For storing total post count
+  int _likesCount = 0; // For storing total likes count
+  List<DocumentSnapshot> _userPosts = [];  // To store user's posts
 
   @override
   void initState() {
     super.initState();
     _loadUserData(); // Load data when the page is loaded
+    _loadUserPosts(); // Load posts when the page is loaded
   }
 
   // Function to load user data from Firestore
@@ -54,32 +61,155 @@ class _ProfilePageState extends State<ProfilePage> {
       } catch (e) {
         print('Error loading user data: $e');
       }
-    } else {
-      print('No user logged in');
     }
   }
 
-  // Function to display the full profile picture
+  // Function to load user posts from Firestore and calculate the total likes
+  Future<void> _loadUserPosts() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Fetch user's posts from Firestore
+        QuerySnapshot postSnapshot = await _firestore.collection('users').doc(user.uid).collection('posts').get();
+
+        setState(() {
+          _userPosts = postSnapshot.docs;
+          _postCount = _userPosts.length;
+
+          // Initialize total likes count
+          _likesCount = 0;
+
+          // Loop through each post to calculate likes
+          _userPosts.forEach((post) {
+            // Check if 'likes' exists for the post, else set it to 0
+            var likes = post['likes'] != null ? post['likes'] : 0;
+
+            // If likes is a list, we count the number of likes in the list
+            if (likes is List) {
+              _likesCount += likes.length;
+            } else if (likes is int) {
+              _likesCount += likes;
+            }
+          });
+        });
+      } catch (e) {
+        print('Error loading user posts: $e');
+      }
+    }
+  }
+
+
+
+
+
+  // Function to delete the post
+  void _deletePost(String postId) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      try {
+        await _firestore.collection('users').doc(user.uid).collection('posts').doc(postId).delete();
+        // Reload the posts after deletion
+        _loadUserPosts();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Post deleted successfully')));
+      } catch (e) {
+        print('Error deleting post: $e');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting post')));
+      }
+    }
+  }
+
+  // Function to show the delete confirmation dialog
+  void _showDeleteConfirmationDialog(String postId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Post?',
+            style: GoogleFonts.comicNeue(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.black,
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                _deletePost(postId); // Delete the post
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Delete',
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Function to display the full profile picture with a blurred background
   void _showFullProfilePic(BuildContext context) {
     if (_profilePic != null) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return Dialog(
+            backgroundColor: Colors.transparent, // Transparent background for dialog
             child: GestureDetector(
               onTap: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Close the dialog when tapped
               },
-              child: Container(
-                color: Colors.black,
-                child: Center(
-                  child: Image.memory(
-                    _profilePic!,
-                    fit: BoxFit.cover,
-                    height: MediaQuery.of(context).size.height * 0.7,
-                    width: MediaQuery.of(context).size.width * 0.7,
+              child: Stack(
+                children: [
+                  // BackdropFilter to blur the background
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0), // Set the blur intensity
+                      child: Container(
+                        color: Colors.black.withOpacity(0), // Keep the background transparent with slight opacity
+                      ),
+                    ),
                   ),
-                ),
+                  // Profile image in circle
+                  Center(
+                    child: CircleAvatar(
+                      radius: 120, // Smaller circle size for the profile picture
+                      backgroundImage: MemoryImage(_profilePic!),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -88,26 +218,234 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Function to log out with confirmation dialog
+  void _logOut() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Are you sure you want to log out of your account?',
+            style: GoogleFonts.comicNeue(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.black,
+                backgroundColor: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Perform log out
+                await FirebaseAuth.instance.signOut();
+
+                // Navigate to the WelcomeScreen after logging out
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => WelcomeScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Log out',
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// Function to show the post details in a dialog
+  void _showPostDetailsDialog(DocumentSnapshot post) {
+    String formattedDate = 'Unknown time';
+    if (post['timestamp'] != null) {
+      DateTime dateTime = post['timestamp'].toDate();
+      formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    }
+
+    Widget imageWidget = SizedBox.shrink();
+    if (post['image'] != null) {
+      try {
+        Uint8List decodedImage = base64Decode(post['image']);
+        imageWidget = Image.memory(
+          decodedImage,
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        imageWidget = Container(
+          height: 100,
+          color: Colors.grey[300],
+          child: Center(child: Text('Invalid image format')),
+        );
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent, // Transparent background for dialog
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).pop(); // Close the dialog when tapped
+            },
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                    child: Container(
+                      color: Colors.transparent, // Keep this transparent to avoid the black box
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 800,
+                    height: 400,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: CircleAvatar(
+                            radius: 20,
+                            backgroundImage: _profilePic != null
+                                ? MemoryImage(_profilePic!)
+                                : NetworkImage('https://via.placeholder.com/150'),
+                          ),
+                          title: Text(
+                            _username,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          subtitle: Text(
+                            post['location'] ?? 'Unknown',
+                            style: GoogleFonts.merriweather(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                          trailing: Text(
+                            formattedDate,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          post['content'] ?? '',
+                          style: TextStyle(fontSize: 14, color: Colors.black),
+                        ),
+                        SizedBox(height: 10),
+                        imageWidget,
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  '${post['likes'] != null && post['likes'] is List ? post['likes'].length : 0} Likes',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.comment_outlined,
+                                  color: Colors.black,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  '1 Comments', // Assuming 1 comment for now
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
-          "CareMate",
+          "Profile Page",
           style: GoogleFonts.comicNeue(
-            fontSize: 35,
-            fontWeight: FontWeight.w900, // Replace with your desired font family
+            fontSize: 25,
+            fontWeight: FontWeight.w900,
             color: Colors.deepOrange,
           ),
         ),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -117,12 +455,12 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               // Profile Picture - wrapped with GestureDetector
               GestureDetector(
-                onTap: () => _showFullProfilePic(context), // Show full profile image on tap
+                onTap: () => _showFullProfilePic(context),
                 child: CircleAvatar(
                   radius: 50,
                   backgroundImage: _profilePic != null
-                      ? MemoryImage(_profilePic!) // Display image if it's loaded
-                      : NetworkImage('https://via.placeholder.com/150') as ImageProvider, // Default image if no profile pic
+                      ? MemoryImage(_profilePic!)
+                      : NetworkImage('https://via.placeholder.com/150') as ImageProvider,
                 ),
               ),
               SizedBox(height: 10),
@@ -130,12 +468,20 @@ class _ProfilePageState extends State<ProfilePage> {
               // Name and Role
               Text(
                 _username,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: GoogleFonts.comicNeue(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
                 textAlign: TextAlign.center,
               ),
               Text(
                 _job,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 10),
@@ -143,46 +489,146 @@ class _ProfilePageState extends State<ProfilePage> {
               // Bio
               Text(
                 _bio,
-                style: TextStyle(fontSize: 16),
+                style: GoogleFonts.comicNeue(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
                 textAlign: TextAlign.center,
               ),
+
               SizedBox(height: 20),
 
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Posts section
+                  Column(
+                    children: [
+                      Text(
+                        '$_postCount',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900, // Bold weight for the count
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'Posts',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 30),  // Spacing between "Posts" and "Likes"
+                  // Likes section
+                  Column(
+                    children: [
+                      Text(
+                        '$_likesCount',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900, // Bold weight for the count
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        'Likes',
+                        style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
               // Action Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Navigate to EditProfilePage and wait for results
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => EditProfilePage()), // Navigate to EditProfilePage
+                        MaterialPageRoute(builder: (context) => EditProfilePage()),
                       ).then((_) {
-                        // Force refresh the data when returning from EditProfilePage
-                        _loadUserData(); // Reload the data when coming back
+                        _loadUserData();
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black, backgroundColor: Colors.orange,
+                      foregroundColor: Colors.black,
+                      backgroundColor: Colors.orange,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text('Edit Profile'),
+                    child: Text(
+                      'Edit Profile',
+                      style: GoogleFonts.comicNeue(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},  // No function for this button
+                    onPressed: _logOut,
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black, backgroundColor: Colors.orange,
+                      foregroundColor: Colors.black,
+                      backgroundColor: Colors.orange,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text('Create Posts'),
+                    child: Text(
+                      'Log Out',
+                      style: GoogleFonts.comicNeue(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
                 ],
               ),
+
+              // Display posts in GridView
+              SizedBox(height: 20),  // Add spacing between buttons and post images
+              GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,  // Increased spacing between columns
+                  mainAxisSpacing: 12,   // Increased spacing between rows
+                ),
+                itemCount: _userPosts.length,
+                itemBuilder: (context, index) {
+                  String imageUrl = _userPosts[index]['image']; // Assuming the post has an 'image' field
+
+                  return GestureDetector(
+                    onTap: () => _showPostDetailsDialog(_userPosts[index]), // Show post details dialog
+                    child: Stack(
+                      children: [
+                        // The image is displayed here
+                        Image.memory(
+                          base64Decode(imageUrl),
+                          fit: BoxFit.cover,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              SizedBox(height: 20),
             ],
           ),
         ),
@@ -193,6 +639,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
 void main() {
   runApp(MaterialApp(
-    home: ProfilePage(),  // ProfilePage as the home page
+    home: ProfilePage(),
   ));
 }

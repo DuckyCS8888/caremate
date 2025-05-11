@@ -21,6 +21,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  bool _isPasswordVisible = false;  // Track visibility of the password
+
   // Function for login
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
@@ -82,8 +84,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -140,10 +140,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password TextField
+                // Password TextField with Eye Icon for visibility toggle
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,  // Toggle visibility
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: GoogleFonts.poppins(
@@ -156,6 +156,17 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[600],
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.orange,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;  // Toggle password visibility
+                        });
+                      },
                     ),
                   ),
                   validator: (value) {
