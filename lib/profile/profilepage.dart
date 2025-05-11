@@ -96,7 +96,7 @@ class _ProfilePageState extends State<ProfilePage> {
         title: Text(
           "CareMate",
           style: GoogleFonts.comicNeue(
-            fontSize: 35,
+            fontSize: 30,
             fontWeight: FontWeight.w900, // Replace with your desired font family
             color: Colors.deepOrange,
           ),

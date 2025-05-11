@@ -23,6 +23,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  bool _isPasswordVisible = false;  // Track visibility for password
+  bool _isConfirmPasswordVisible = false;  // Track visibility for confirm password
+
   // Function to handle the sign-up process
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
@@ -107,10 +110,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password TextField
+                // Password TextField with Eye Icon for visibility toggle
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,  // Toggle visibility
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: GoogleFonts.poppins(
@@ -124,6 +127,19 @@ class _SignUpPageState extends State<SignUpPage> {
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[600],
                     ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Colors.orange,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;  // Toggle password visibility
+                        });
+                      },
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty || value.length < 6) {
@@ -134,10 +150,10 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Confirm Password TextField
+                // Confirm Password TextField with Eye Icon for visibility toggle
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
+                  obscureText: !_isConfirmPasswordVisible,  // Toggle visibility
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     labelStyle: GoogleFonts.poppins(
@@ -150,6 +166,19 @@ class _SignUpPageState extends State<SignUpPage> {
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
                       color: Colors.grey[600],
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isConfirmPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Colors.orange,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;  // Toggle confirm password visibility
+                        });
+                      },
                     ),
                   ),
                   validator: (value) {
