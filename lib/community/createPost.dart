@@ -234,7 +234,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     fontStyle: FontStyle.italic,
                     color: Colors.black, // Black color for the label
                   ),
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 2), // Default border
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 2), // Black color and bold width when focused
+                ),
                 ),
                 maxLines: 3,
               ),
@@ -245,7 +250,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 children: [
                   Text(
                     'Location:',
-                    style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.lato(
+                        fontWeight: FontWeight.bold,
+                    fontSize: 20),
                   ),
                   SizedBox(width: 10),
                   DropdownButton<String>(
@@ -305,41 +312,46 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 children: [
                   Text(
                     'Category:',
-                    style: GoogleFonts.lato(fontWeight: FontWeight.bold),
+                    style: GoogleFonts.lato(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
                   ),
                   SizedBox(width: 10),
                   DropdownButton<String>(
                     value: _selectedCategory,
-                    items: <String>[
-                      'Select Category',
-                      'Food',
-                      'Fund',
-                      'Shelter',
-                      'Health',
-                      'Education',
-                    ].map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          style: TextStyle(
-                            color: Colors.black, // Black font color
-                            fontWeight: FontWeight.bold, // Bold font
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    items:
+                        <String>[
+                          'Select Category',
+                          'Food',
+                          'Fund',
+                          'Shelter',
+                          'Health',
+                          'Education',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: TextStyle(
+                                color: Colors.black, // Black font color
+                                fontWeight: FontWeight.bold, // Bold font
+                              ),
+                            ),
+                          );
+                        }).toList(),
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedCategory = newValue!;
-                        _isCategoryValid = _selectedCategory != 'Select Category'; // Validate category
+                        _isCategoryValid =
+                            _selectedCategory !=
+                            'Select Category'; // Validate category
                       });
                     },
                   ),
                 ],
               ),
 
-// Show validation error if category is not selected
+              // Show validation error if category is not selected
               if (!_isCategoryValid)
                 Text(
                   'Please select a valid category',
@@ -347,79 +359,86 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ),
               SizedBox(height: 16),
 
-// Image picker button (aligned to center)
               // Image picker button (aligned to center)
-              // Image picker button (aligned to center)
-              SizedBox(
-                width: 200, // Set the width to 200 for all buttons
-                child: _imageBytes == null
-                    ? ElevatedButton(
-                  onPressed: _pickImage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange, // Button background color
-                    foregroundColor: Colors.white, // Button text color
-                    padding: EdgeInsets.symmetric(vertical: 12), // Adjust vertical padding
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              _imageBytes == null
+                  ? ElevatedButton(
+                    onPressed: _pickImage,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                  Colors.deepOrange, // Button background color
+                  foregroundColor: Colors.white, // Button text color
+                  padding: EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 32,
+                  ), // Adjust padding
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8), // Rounded corners
                   ),
-                  child: Text('Pick Image'),
-                )
-                    : Column(
-                  children: [
-                    // Use Image.memory and adjust the aspect ratio to keep it rectangular
-                    Image.memory(
-                      _imageBytes!,
-                      fit: BoxFit.contain, // Ensure the image fits inside the container
-                      width: double.infinity, // Let the image fill the container width
-                      height: 200, // Adjust height to a fixed value for consistency
-                    ),
-                    SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: _pickImage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange, // Button background color
-                        foregroundColor: Colors.white, // Button text color
-                        padding: EdgeInsets.symmetric(vertical: 12), // Adjust vertical padding
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        'Change Image',
-                        style: GoogleFonts.comicNeue(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-
+                    child: Text(
+                        'Pick Image',
+                      style: GoogleFonts.comicNeue(
+                          fontSize: 18,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700
+                      ),),
+                  )
+                  : Column(
+                    children: [
+                      Image.memory(
+                        _imageBytes!,
+                        height: 200,
+                        width: 450,
+                        fit: BoxFit.cover,
+                      ),
+                      ElevatedButton(
+                        onPressed: _pickImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                          Colors.deepOrange, // Button background color
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            vertical: 20,
+                            horizontal: 32,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text('Change Image',
+                          style: GoogleFonts.comicNeue(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700
+                          ),),
+                      ),
+                    ],
+                  ),
               SizedBox(height: 16),
 
-// Submit post button (centered)
-              SizedBox(
-                width: 200, // Set the width to 200 for all buttons
+              // Submit post button (centered)
+              Center(
                 child: ElevatedButton(
                   onPressed: _createPost,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange, // Button background color
+                    backgroundColor:
+                        Colors.deepOrange, // Button background color
                     foregroundColor: Colors.white, // Button text color
-                    padding: EdgeInsets.symmetric(vertical: 12), // Adjust vertical padding
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 32,
+                    ), // Adjust padding
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8), // Rounded corners
                     ),
                   ),
                   child: Text(
-                    'Create Post',
-                    style: GoogleFonts.comicNeue(
-                      fontSize: 18,
-                      color: Colors.white, // Ensure the text is white
-                      fontWeight: FontWeight.w700,
-                    ),
+                      'Create Post',
+                      style: GoogleFonts.comicNeue(
+                        fontSize: 18,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700
+                      ),
                   ),
                 ),
               ),
