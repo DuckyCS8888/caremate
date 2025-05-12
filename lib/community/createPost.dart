@@ -349,6 +349,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
 
 // Image picker button (aligned to center)
               // Image picker button (aligned to center)
+              // Image picker button (aligned to center)
               SizedBox(
                 width: 200, // Set the width to 200 for all buttons
                 child: _imageBytes == null
@@ -366,11 +367,12 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 )
                     : Column(
                   children: [
+                    // Use Image.memory and adjust the aspect ratio to keep it rectangular
                     Image.memory(
                       _imageBytes!,
-                      height: 200,
-                      width: 500, // You can adjust the image size as necessary
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain, // Ensure the image fits inside the container
+                      width: double.infinity, // Let the image fill the container width
+                      height: 200, // Adjust height to a fixed value for consistency
                     ),
                     SizedBox(height: 8),
                     ElevatedButton(

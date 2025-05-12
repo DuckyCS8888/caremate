@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:projects/home.dart';
 import 'package:projects/screen/profile_setup.dart';
+import 'forgot_password.dart';  // Import the Forgot Password Page
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,10 +40,10 @@ class _LoginPageState extends State<LoginPage> {
 
         // Fetch user document
         DocumentSnapshot userDoc =
-            await _firestore
-                .collection('users')
-                .doc(userCredential.user!.uid)
-                .get();
+        await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
 
         if (userDoc.exists && userDoc.data() != null) {
           var data = userDoc.data() as Map<String, dynamic>;
@@ -50,15 +51,15 @@ class _LoginPageState extends State<LoginPage> {
           // Check if profile is complete
           bool isProfileComplete =
               data['username'] != null &&
-              data['username'].toString().isNotEmpty &&
-              data['contact'] != null &&
-              data['contact'].toString().isNotEmpty &&
-              data['profilePic'] != null &&
-              data['profilePic'].toString().isNotEmpty &&
-              data['job'] != null &&
-              data['job'].toString().isNotEmpty &&
-              data['bio'] != null &&
-              data['bio'].toString().isNotEmpty;
+                  data['username'].toString().isNotEmpty &&
+                  data['contact'] != null &&
+                  data['contact'].toString().isNotEmpty &&
+                  data['profilePic'] != null &&
+                  data['profilePic'].toString().isNotEmpty &&
+                  data['job'] != null &&
+                  data['job'].toString().isNotEmpty &&
+                  data['bio'] != null &&
+                  data['bio'].toString().isNotEmpty;
 
           if (isProfileComplete) {
             Navigator.pushReplacement(
@@ -103,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
           style: GoogleFonts.comicNeue(
             fontSize: 30,
             fontWeight:
-                FontWeight.w700, // Replace with your desired font family
+            FontWeight.w700, // Replace with your desired font family
             color: Colors.white,
           ),
         ),
@@ -187,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         setState(() {
                           _isPasswordVisible =
-                              !_isPasswordVisible; // Toggle password visibility
+                          !_isPasswordVisible; // Toggle password visibility
                         });
                       },
                     ),
@@ -199,6 +200,27 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+
+                // Forgot Password Link (below the password field)
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ForgotPasswordPage()), // Navigate to the ForgotPasswordPage
+                    );
+                  },
+                  child: Text(
+                    'Forgot your password?',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 20),
 
                 // Login Button
