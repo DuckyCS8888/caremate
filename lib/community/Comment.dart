@@ -32,18 +32,22 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirm Delete',
-              style: GoogleFonts.comicNeue(
-                fontSize: 30,
-                color: Colors.black,
-                fontWeight: FontWeight.w700,
-              ),),
-          content: Text('Are you sure you want to delete this comment?',
+          title: Text(
+            'Confirm Delete',
+            style: GoogleFonts.comicNeue(
+              fontSize: 30,
+              color: Colors.black,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete this comment?',
             style: GoogleFonts.comicNeue(
               fontSize: 14,
               color: Colors.black,
               fontWeight: FontWeight.w700,
-            ),),
+            ),
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -57,12 +61,14 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text('Cancel',
+              child: Text(
+                'Cancel',
                 style: GoogleFonts.comicNeue(
                   fontSize: 18,
                   color: Colors.black,
                   fontWeight: FontWeight.w700,
-                ),),
+                ),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -269,20 +275,16 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                   var comment = _comments[index];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: _decodeBase64ProfilePic(
-                        comment['profilePic'],
-                      ),
-                      child:
-                          comment['profilePic'].isEmpty
-                              ? Icon(Icons.person)
-                              : null,
+                      backgroundImage: _decodeBase64ProfilePic(comment['profilePic']),
+                      child: comment['profilePic'].isEmpty
+                          ? Icon(Icons.person)
+                          : null,
                     ),
                     title: Text(
                       comment['username'],
                       style: GoogleFonts.montserrat(
                         fontSize: 18, // Font size for the username
-                        fontWeight:
-                            FontWeight.w700, // Bold style for the username
+                        fontWeight: FontWeight.w700, // Bold style for the username
                         color: Colors.black, // Text color for the username
                       ),
                     ),
@@ -290,8 +292,7 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                       comment['comment'],
                       style: GoogleFonts.lato(
                         fontSize: 16, // Font size for the comment
-                        fontWeight:
-                            FontWeight.normal, // Normal style for the comment
+                        fontWeight: FontWeight.normal, // Normal style for the comment
                         color: Colors.black87, // Text color for the comment
                       ),
                     ),
@@ -309,20 +310,19 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                             color: Colors.black,
                           ),
                         ),
-                        SizedBox(
-                          width: 10,
-                        ), // Space between timestamp and delete icon
-                        // Trash bin icon to delete comment
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            // Show confirmation dialog before deleting
-                            _showDeleteConfirmationDialog(
-                              context,
-                              comment['commentID'],
-                            );
-                          },
-                        ),
+                        SizedBox(width: 10), // Space between timestamp and delete icon
+                        // Only show the delete button if the current user is the commenter
+                        if (comment['userID'] == FirebaseAuth.instance.currentUser?.uid)
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              // Show confirmation dialog before deleting
+                              _showDeleteConfirmationDialog(
+                                context,
+                                comment['commentID'],
+                              );
+                            },
+                          ),
                       ],
                     ),
                     onTap: () {},
