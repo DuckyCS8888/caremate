@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'createPost.dart'; // Import your CreatePostPage
 import 'Comment.dart';
-import 'notification.dart';
+import 'package:intl/intl.dart';
 
 class CommunityForum extends StatefulWidget {
   @override
@@ -221,14 +221,18 @@ class _CommunityForumState extends State<CommunityForum> {
         backgroundColor: Colors.white,
         actions: [
           // Refresh button
-          IconButton(icon: Icon(Icons.refresh), onPressed: _fetchPosts),
+          IconButton(icon: Icon(
+              Icons.refresh,
+          color: Colors.black,), onPressed: _fetchPosts),
           // Notification button
           // Notification button in AppBar
           IconButton(
             icon: _hasUnreadNotifications
                 ? Stack(
               children: [
-                Icon(Icons.notifications),
+                Icon(
+                    Icons.notifications,
+                    color: Colors.black),
                 Positioned(
                   top: 0,
                   right: 0,
@@ -243,7 +247,9 @@ class _CommunityForumState extends State<CommunityForum> {
                 )
               ],
             )
-                : Icon(Icons.notifications),
+                : Icon(
+                Icons.notifications,
+                color: Colors.black),
             onPressed: () {
               // Mark notifications as read when the user interacts with the bell (without navigating)
               _markNotificationsAsRead();
@@ -376,8 +382,11 @@ class _CommunityForumState extends State<CommunityForum> {
             _fetchPosts();
           }
         },
-        child: Icon(Icons.add),
-        backgroundColor: Colors.red,
+        tooltip: 'Create Post',
+        child: Icon(
+            Icons.add,
+        color: Colors.black,),
+        backgroundColor: Colors.deepOrange,
       ),
     );
   }
@@ -421,7 +430,14 @@ class CategoryButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
-      child: Text(categoryName),
+      child: Text(
+          categoryName,
+      style: GoogleFonts.lato(
+          textStyle: TextStyle(
+          fontSize: 13,
+        fontWeight: FontWeight.w900,
+      )
+      )),
     );
   }
 }
@@ -730,6 +746,7 @@ class _PostCardState extends State<PostCard> {
 
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
