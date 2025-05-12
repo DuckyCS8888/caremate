@@ -391,6 +391,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                         width: 450,
                         fit: BoxFit.cover,
                       ),
+                      SizedBox(height: 20,),
                       ElevatedButton(
                         onPressed: _pickImage,
                         style: ElevatedButton.styleFrom(
