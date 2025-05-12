@@ -182,7 +182,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: GoogleFonts.comicNeue(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: Colors.deepOrange,
                       ),
                     ),
                   ],
@@ -197,7 +197,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: Colors.deepOrange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -227,7 +227,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: Colors.deepOrange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -257,7 +257,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: Colors.deepOrange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -287,7 +287,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: Colors.deepOrange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -319,8 +319,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.black,
-                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.deepOrange,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -330,7 +330,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: GoogleFonts.comicNeue(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                     ),

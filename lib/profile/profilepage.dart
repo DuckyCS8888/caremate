@@ -530,15 +530,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ElevatedButton(
                   onPressed: _logOut, // Log out function
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.deepOrange,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: Icon(
                     Icons.exit_to_app,  // Exit icon
-                    color: Colors.black,
                   ),
                 ),
               ],
@@ -664,8 +663,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.deepOrange,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -675,7 +674,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: GoogleFonts.comicNeue(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
                       ),
                     ),
                   ),
