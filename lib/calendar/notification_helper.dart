@@ -6,7 +6,7 @@ class NotificationHelper{
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> initializeNotification() async{
-    tz.initializeTimeZones();
+    tz.initializeTimeZones();//confirm local time
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initializationSettings = InitializationSettings(android: androidSettings);
     await _notificationsPlugin.initialize(initializationSettings);
@@ -24,6 +24,7 @@ class NotificationHelper{
     createNotificationChannel(channel);
   }
 
+//set at specific time
   static Future<void> scheduleNotification(int id,String title,String category,DateTime
       sceduledTime) async{
     const androidDetails = AndroidNotificationDetails(
@@ -34,8 +35,8 @@ class NotificationHelper{
       playSound: true,
     );
     final notificationDetails = NotificationDetails(android: androidDetails);
+    //ensure follow set time
     if (sceduledTime.isBefore(DateTime.now())){
-// do nothing
     }else{
       await _notificationsPlugin.zonedSchedule(
           id, title, category, tz.TZDateTime.from(sceduledTime,tz.local),
@@ -46,6 +47,7 @@ class NotificationHelper{
       );
     }
   }
+  //cancel notification
   static Future<void> cancelNotification(int id) async{
     await _notificationsPlugin.cancel(id);
   }

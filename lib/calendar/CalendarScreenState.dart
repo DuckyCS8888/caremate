@@ -48,6 +48,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  //Set Reminder
   void _loadReminders() async {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
     if (userId.isEmpty) {
@@ -70,6 +71,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+//UI calander screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,6 +117,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ],
         ),
       ),
+      //add new note and time '+'
       body: Stack(
         children: [
           buildCalendarBody(),
@@ -140,7 +143,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         return Center(child: Text("Invalid view"));
     }
   }
-
+// Month view
   Widget buildMonthView() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -186,6 +189,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               },
             ),
           ),
+          // edit icon,delete button
           if (_selectedDay != null && dayNotes.containsKey(_selectedDay))
             Expanded(
               child: ListView.builder(
@@ -224,7 +228,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
     );
   }
-
+//allow user enter note n time
   Future<void> _showAddNoteDialog(BuildContext context) async {
     TextEditingController _noteController = TextEditingController();
     TimeOfDay? _reminderTime;
@@ -261,7 +265,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
                     DateTime reminderDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(
                         '${DateFormat('yyyy-MM-dd').format(_selectedDay!)} ${formattedTime}' );
-
+//notification reminder
                     NotificationHelper.scheduleNotification(
                       0,
                       'Reminder',
@@ -293,11 +297,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
       },
     );
   }
-
+//choose reminder time
   Future<TimeOfDay?> _selectTime(BuildContext context) async {
     return showTimePicker(context: context, initialTime: TimeOfDay.now());
   }
-
+//save note and time to firebase
   void saveNoteToFirestore(DateTime selectedDay, String note, String reminderTime) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -311,7 +315,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       'times': FieldValue.arrayUnion([reminderTime]),
     }, SetOptions(merge: true));
   }
-
+//fetch note and time out from firebase
   void fetchNotesFromFirestore(DateTime selectedDay) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -335,7 +339,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       print('Error fetching notes: $e');
     }
   }
-
+//delete the selected note and time
   void _deleteNoteAndTime(DateTime selectedDay, int index) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
@@ -365,7 +369,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       print('Error deleting note: $e');
     }
   }
-
+// search bar with note
   void _searchNoteAndJump(String query) async {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
     if (userId.isEmpty) return;
@@ -405,6 +409,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  //edit note and time function
   void _editNoteAndTime(int index) {
     TextEditingController _editNoteController = TextEditingController(text: dayNotes[_selectedDay]?[index]);
     TimeOfDay? _reminderTime = TimeOfDay.now(); // Set default time if needed
@@ -465,6 +470,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       },
     );
   }
+
+  //save updated new note and time
   void saveUpdatedNoteToFirestore(DateTime selectedDay, String updatedNote, String updatedTime, int index) async {
     String dateKey = selectedDay.toIso8601String().split('T').first;
     String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
