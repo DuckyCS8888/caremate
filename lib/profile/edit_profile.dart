@@ -182,7 +182,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: GoogleFonts.comicNeue(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey,
+                        color: Colors.orange,
                       ),
                     ),
                   ],
@@ -197,7 +197,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Colors.orange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -227,7 +227,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Colors.orange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -257,7 +257,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Colors.orange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
@@ -287,7 +287,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     labelStyle: GoogleFonts.comicNeue(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Colors.orange,
                     ),
                     errorStyle: GoogleFonts.comicNeue(
                       fontSize: 14,
