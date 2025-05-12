@@ -281,7 +281,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
 // Function to show the post details in a dialog
   void _showPostDetailsDialog(DocumentSnapshot post) {
     String formattedDate = 'Unknown time';
