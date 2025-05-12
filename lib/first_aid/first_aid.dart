@@ -61,6 +61,7 @@ class _FirstAidPageState extends State<FirstAidPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           "Essential First Aid",
           style: GoogleFonts.comicNeue(
