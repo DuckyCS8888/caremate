@@ -27,24 +27,40 @@ final List<_FirstAidItem> items = [
   _FirstAidItem('Severe Nosebleed', 'assets/images/nosebleed.png'),
 ];
 
-class FirstAidPage extends StatelessWidget {
+// Method to open the dialer with 999 pre-filled
+Future<void> _openDialer() async {
+  final Uri url = Uri(scheme: 'tel', path: '999');
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url);
+  } else {
+    print('Could not launch dialer');
+  }
+}
+
+class FirstAidPage extends StatefulWidget {
   const FirstAidPage({super.key});
 
-  // Method to open the dialer with 999 pre-filled
-  Future<void> _openDialer() async {
-    final Uri url = Uri(scheme: 'tel', path: '999');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      print('Could not launch dialer');
-    }
+  @override
+  _FirstAidPageState createState() => _FirstAidPageState();
+}
+
+class _FirstAidPageState extends State<FirstAidPage> {
+  // Search query to filter items
+  TextEditingController _searchController = TextEditingController();
+  List<_FirstAidItem> filteredItems = items;
+
+  void _filterItems(String query) {
+    setState(() {
+      filteredItems = items
+          .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: Text(
           "Essential First Aid",
           style: GoogleFonts.comicNeue(
@@ -57,11 +73,21 @@ class FirstAidPage extends StatelessWidget {
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      // Set the background color of the entire screen to white
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
+            // Search bar for filtering first aid items
+            TextField(
+              controller: _searchController,
+              onChanged: _filterItems,
+              decoration: InputDecoration(
+                labelText: 'Search First Aid Item',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+            SizedBox(height: 10.0),
             // Grid view of first aid items
             Expanded(
               child: GridView.builder(
@@ -70,9 +96,9 @@ class FirstAidPage extends StatelessWidget {
                   crossAxisSpacing: 8.0,
                   mainAxisSpacing: 8.0,
                 ),
-                itemCount: items.length,
+                itemCount: filteredItems.length,
                 itemBuilder: (context, index) {
-                  final item = items[index];
+                  final item = filteredItems[index];
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -132,7 +158,7 @@ class FirstAidPage extends StatelessWidget {
                 },
               ),
             ),
-            // SOS Button
+            // SOS Button and Emergency Call
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -164,11 +190,11 @@ class FirstAidPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 2.0), // Add some space between the SOS button and the "Emergency Call" text
+                  SizedBox(height: 2.0),
                   Text(
                     'Emergency Call',
                     style: TextStyle(
-                      color: Colors.black, // Set text color
+                      color: Colors.black,
                       fontSize: 10.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -176,7 +202,6 @@ class FirstAidPage extends StatelessWidget {
                 ],
               ),
             ),
-
           ],
         ),
       ),

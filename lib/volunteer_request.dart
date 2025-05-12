@@ -47,11 +47,23 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
   }
 
   // Method to calculate distance between volunteer and the requestor
-  Future<String> _calculateDistance(double volunteerLat, double volunteerLng, double requestLat, double requestLng) async {
-    double distanceInMeters = await Geolocator.distanceBetween(volunteerLat, volunteerLng, requestLat, requestLng);
-    double distanceInKilometers = distanceInMeters / 1000; // Convert meters to kilometers
+  Future<String> _calculateDistance(
+    double volunteerLat,
+    double volunteerLng,
+    double requestLat,
+    double requestLng,
+  ) async {
+    double distanceInMeters = await Geolocator.distanceBetween(
+      volunteerLat,
+      volunteerLng,
+      requestLat,
+      requestLng,
+    );
+    double distanceInKilometers =
+        distanceInMeters / 1000; // Convert meters to kilometers
 
-    return distanceInKilometers.toStringAsFixed(2) + ' km'; // Return distance with 2 decimal places
+    return distanceInKilometers.toStringAsFixed(2) +
+        ' km'; // Return distance with 2 decimal places
   }
 
   // Fetch all available help requests from Firestore
@@ -234,13 +246,17 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(false); // User cancelled the deletion
+                  Navigator.of(
+                    context,
+                  ).pop(false); // User cancelled the deletion
                 },
                 child: Text('Cancel'),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(true); // User confirmed the deletion
+                  Navigator.of(
+                    context,
+                  ).pop(true); // User confirmed the deletion
                 },
                 child: Text('Delete'),
               ),
@@ -259,16 +275,16 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
             .doc(requestId)
             .delete()
             .then((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Request deleted successfully')),
-          );
-          _fetchRequests(); // Refresh the request list after deletion
-        })
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Request deleted successfully')),
+              );
+              _fetchRequests(); // Refresh the request list after deletion
+            })
             .catchError((e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting request: $e')),
-          );
-        });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error deleting request: $e')),
+              );
+            });
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -276,7 +292,6 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
       ).showSnackBar(SnackBar(content: Text('Error deleting request: $e')));
     }
   }
-
 
   // Show request details in a dialog
   void _showRequestDetails(DocumentSnapshot request) {
@@ -514,165 +529,211 @@ class _VolunteerRequestPageState extends State<VolunteerRequestPage> {
         ],
       ),
       backgroundColor: Colors.white,
-      body: _loading
-          ? Center(child: CircularProgressIndicator())
-          : _requests.isEmpty
-          ? Center(
-        child: Text(
-          'No ${_filterStatus} requests available.',
-          style: TextStyle(fontSize: 16, color: Colors.grey),
-        ),
-      )
-          : ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: _requests.length,
-        itemBuilder: (context, index) {
-          var request = _requests[index];
-          bool isHighUrgency = request['urgency'] == 'High';
-          bool isOwnRequest = request['userId'] == FirebaseAuth.instance.currentUser?.uid;
-          bool volunteerAccepted = request['volunteerAccepted'] ?? false;
-
-          // Coordinates of the requestor (user)
-          double requestLat = request['latitude'] ?? 0.0;
-          double requestLng = request['longitude'] ?? 0.0;
-
-          // Coordinates of the volunteer (current user's location)
-          double volunteerLat = _latitude ?? 0.0; // Volunteer latitude
-          double volunteerLng = _longitude ?? 0.0; // Volunteer longitude
-
-          return FutureBuilder<String>(
-            future: _calculateDistance(volunteerLat, volunteerLng, requestLat, requestLng),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
-
-              String distance = snapshot.data ?? 'Calculating...';
-
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+      body:
+          _loading
+              ? Center(child: CircularProgressIndicator())
+              : _requests.isEmpty
+              ? Center(
+                child: Text(
+                  'No ${_filterStatus} requests available.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-                elevation: 8,
-                margin: EdgeInsets.only(bottom: 12),
-                color: isHighUrgency
-                    ? Colors.red[50]
-                    : volunteerAccepted
-                    ? Colors.green[50]
-                    : Colors.white,
-                child: ListTile(
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  leading: CircleAvatar(
-                    backgroundColor: volunteerAccepted
-                        ? Colors.green
-                        : Colors.orangeAccent,
-                    child: Icon(
-                      Icons.volunteer_activism,
-                      color: Colors.white,
+              )
+              : ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                itemCount: _requests.length,
+                itemBuilder: (context, index) {
+                  var request = _requests[index];
+                  bool isHighUrgency = request['urgency'] == 'High';
+                  bool isOwnRequest =
+                      request['userId'] ==
+                      FirebaseAuth.instance.currentUser?.uid;
+                  bool volunteerAccepted =
+                      request['volunteerAccepted'] ?? false;
+
+                  // Coordinates of the requestor (user)
+                  double requestLat = request['latitude'] ?? 0.0;
+                  double requestLng = request['longitude'] ?? 0.0;
+
+                  // Coordinates of the volunteer (current user's location)
+                  double volunteerLat = _latitude ?? 0.0; // Volunteer latitude
+                  double volunteerLng =
+                      _longitude ?? 0.0; // Volunteer longitude
+
+                  return FutureBuilder<String>(
+                    future: _calculateDistance(
+                      volunteerLat,
+                      volunteerLng,
+                      requestLat,
+                      requestLng,
                     ),
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              request['title'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'By: ${request['userName'] ?? 'Unknown'}',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+
+                      String distance = snapshot.data ?? 'Calculating...';
+
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                      ),
-                      if (isOwnRequest)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: Chip(
-                            label: Text(
-                              'OWN',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.blue,
+                        elevation: 8,
+                        margin: EdgeInsets.only(bottom: 12),
+                        color:
+                            isHighUrgency
+                                ? Colors.red[50]
+                                : volunteerAccepted
+                                ? Colors.green[50]
+                                : Colors.white,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                        ),
-                    ],
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 8),
-                      Text('Category: ${request['category']}'),
-                      Text('Urgency: ${request['urgency']}'),
-                      SizedBox(height: 4),
-                      Text('Distance: $distance'), // Display distance
-                    ],
-                  ),
-                  trailing: volunteerAccepted
-                      ? IconButton(
-                    icon: Icon(
-                      Icons.cancel_outlined,
-                      color: Colors.red,
-                    ),
-                    onPressed: () => _cancelRequest(request.id, request['userId']),
-                  )
-                      : isOwnRequest // Show Delete and Edit buttons if it's the user's own request
-                      ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Edit Button
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          // Navigate to the EditRequestPage
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditRequestPage(
-                                requestId: request.id,
-                                currentTitle: request['title'],
-                                currentDescription: request['description'],
-                                currentCategory: request['category'],
-                                currentUrgency: request['urgency'],
-                              ),
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                volunteerAccepted
+                                    ? Colors.green
+                                    : Colors.orangeAccent,
+                            child: Icon(
+                              Icons.volunteer_activism,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                      ),
-                      // Delete Button
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          // Trigger delete with confirmation
-                          _deleteRequest(request.id, request['userId']);
-                        },
-                      ),
-                    ],
-                  )
-                      : Icon(
-                    Icons.info_outline,
-                    color: Colors.blueGrey,
-                  ),
-                  onTap: () => _showRequestDetails(request),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                          ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      request['title'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'By: ${request['userName'] ?? 'Unknown'}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isOwnRequest)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Chip(
+                                    label: Text(
+                                      'OWN',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.blue,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 8),
+                              Text('Category: ${request['category']}'),
+                              Text('Urgency: ${request['urgency']}'),
+                              SizedBox(height: 4),
+                              Text('Distance: $distance'), // Display distance
+                            ],
+                          ),
+                          trailing:
+                              volunteerAccepted
+                                  ? Tooltip(
+                                    message:
+                                        'Cancel Request', // The text that will appear when the user long presses the icon
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.cancel_outlined,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed:
+                                          () => _cancelRequest(
+                                            request.id,
+                                            request['userId'],
+                                          ),
+                                    ),
+                                  )
+                                  : isOwnRequest // Show Delete and Edit buttons if it's the user's own request
+                                  ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Edit Button
+                                      Tooltip(
+                                        message:
+                                            'Edit Request', // Tooltip text that appears when the user long-presses the icon
+                                        child: IconButton(
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: Colors.blue,
+                                          ),
+                                          onPressed: () {
+                                            // Navigate to the EditRequestPage
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (
+                                                      context,
+                                                    ) => EditRequestPage(
+                                                      requestId: request.id,
+                                                      currentTitle:
+                                                          request['title'],
+                                                      currentDescription:
+                                                          request['description'],
+                                                      currentCategory:
+                                                          request['category'],
+                                                      currentUrgency:
+                                                          request['urgency'],
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+
+                                      // Delete Button
+                                      Tooltip(
+                                        message:
+                                            'Delete Request', // Tooltip text when the user long-presses the icon
+                                        child: IconButton(
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () {
+                                            // Trigger delete with confirmation
+                                            _deleteRequest(
+                                              request.id,
+                                              request['userId'],
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blueGrey,
+                                  ),
+                          onTap: () => _showRequestDetails(request),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
     );
   }
 }
