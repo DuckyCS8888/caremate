@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';  // Import the intl package for date formatting
+import 'package:google_fonts/google_fonts.dart';
 
 class ViewCommentsPage extends StatefulWidget {
   final String postID; // Post ID passed from the previous page
@@ -161,7 +162,17 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('View Comments')),
+      appBar: AppBar(
+        title: Text(
+        "Comment",
+        style: GoogleFonts.comicNeue(
+        fontSize: 30,
+        fontWeight:
+        FontWeight.w700, // Replace with your desired font family
+        color: Colors.white,
+    ),
+    ),
+    backgroundColor: Colors.orange,),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -179,12 +190,31 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                           ? Icon(Icons.person)
                           : null,
                     ),
-                    title: Text(comment['username']),
-                    subtitle: Text(comment['comment']),
+                    title: Text(
+                      comment['username'],
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18, // Font size for the username
+                        fontWeight: FontWeight.w700, // Bold style for the username
+                        color: Colors.black, // Text color for the username
+                      ),
+                    ),
+                    subtitle: Text(
+                      comment['comment'],
+                      style: GoogleFonts.lato(
+                        fontSize: 16, // Font size for the comment
+                        fontWeight: FontWeight.normal, // Normal style for the comment
+                        color: Colors.black87, // Text color for the comment
+                      ),
+                    ),
+
                     trailing: Text(
-                      // Format the timestamp to show date and time in the required format
-                      DateFormat('M/d/yyyy HH:mm').format((comment['timestamp'] as Timestamp).toDate()),
-                      style: TextStyle(fontSize: 12),
+                      // Format the timestamp to show date and time in 12-hour format with AM/PM
+                      DateFormat('M/d/yyyy hh:mm a').format((comment['timestamp'] as Timestamp).toDate()),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
                     // Delete button (only for the commenter)
                     onLongPress: () {
@@ -203,7 +233,16 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
                 controller: _commentController,
                 decoration: InputDecoration(
                   labelText: 'Add a comment...',
-                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.black, // Black color for the label
+                  ),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 2), // Default border
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black, width: 2),
+                  ),
                 ),
                 maxLines: 3,
               ),
@@ -211,7 +250,23 @@ class _ViewCommentsPageState extends State<ViewCommentsPage> {
             SizedBox(height: 8),
             ElevatedButton(
               onPressed: _addComment,
-              child: Text('Add Comment'),
+              style: ElevatedButton.styleFrom(
+                fixedSize: Size(
+                  MediaQuery.of(context).size.width * 0.7,
+                  50,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                backgroundColor: Colors.orange,
+              ),
+              child: Text(
+                'Add Comment',
+                style: GoogleFonts.comicNeue(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,),
+              ),
             ),
           ],
         ),

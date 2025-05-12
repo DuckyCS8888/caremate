@@ -223,35 +223,33 @@ class _CommunityForumState extends State<CommunityForum> {
         backgroundColor: Colors.white,
         actions: [
           // Refresh button
-          IconButton(icon: Icon(
-              Icons.refresh,
-          color: Colors.black,), onPressed: _fetchPosts),
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.black),
+            onPressed: _fetchPosts,
+          ),
           // Notification button
           // Notification button in AppBar
           IconButton(
-            icon: _hasUnreadNotifications
-                ? Stack(
-              children: [
-                Icon(
-                    Icons.notifications,
-                    color: Colors.black),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                )
-              ],
-            )
-                : Icon(
-                Icons.notifications,
-                color: Colors.black),
+            icon:
+                _hasUnreadNotifications
+                    ? Stack(
+                      children: [
+                        Icon(Icons.notifications, color: Colors.black),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                    : Icon(Icons.notifications, color: Colors.black),
             onPressed: () {
               // Mark notifications as read when the user interacts with the bell (without navigating)
               _markNotificationsAsRead();
@@ -334,51 +332,68 @@ class _CommunityForumState extends State<CommunityForum> {
                     ? Center(child: Text('No posts available'))
                     : RefreshIndicator(
                       onRefresh: _fetchPosts,
-                    child: ListView.builder(
-                      itemCount: _posts.length,
-                      itemBuilder: (context, index) {
-                        var post = _posts[index];
-                        String username = _usernames[post['userID']] ?? 'Anonymous'; // Get username for each post
-                        String profilePicUrl = _profilePics[post['userID']] ?? ''; // Get profile picture URL
+                      child: ListView.builder(
+                        itemCount: _posts.length,
+                        itemBuilder: (context, index) {
+                          var post = _posts[index];
+                          String username =
+                              _usernames[post['userID']] ??
+                              'Anonymous'; // Get username for each post
+                          String profilePicUrl =
+                              _profilePics[post['userID']] ??
+                              ''; // Get profile picture URL
 
-                        return GestureDetector(
-                          onTap: () {
-                            // Navigate to other profile page when the user taps on a post
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => OtherProfilePage(userId: post['userID']),
-                              ),
-                            );
-                          },
-                          child: PostCard(
-                            location: post['location'] ?? 'Unknown',
-                            content: post['content'] ?? '',
-                            image: post['image'] ?? '',
-                            likes: post['likes'] != null
-                                ? (post['likes'] is List ? post['likes'].length : 0)
-                                : 0,
-                            timestamp: post['timestamp'] is Timestamp
-                                ? post['timestamp'] as Timestamp
-                                : null,
-                            postId: post['id'],
-                            userId: post['userID'] ?? '',
-                            username: username, // Pass the correct username here
-                            profilePicUrl: profilePicUrl, // Pass the profile picture URL
-                            onUsernameTap: () {
-                              // Navigate to other profile page when username is tapped
+                          return GestureDetector(
+                            onTap: () {
+                              // Navigate to other profile page when the user taps on a post
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => OtherProfilePage(userId: post['userID']),
+                                  builder:
+                                      (context) => OtherProfilePage(
+                                        userId: post['userID'],
+                                      ),
                                 ),
                               );
                             },
-                          ),
-                        );
-                      },
-                    )
-                ),
+                            child: PostCard(
+                              location: post['location'] ?? 'Unknown',
+                              content: post['content'] ?? '',
+                              image: post['image'] ?? '',
+                              likes:
+                                  post['likes'] != null
+                                      ? (post['likes'] is List
+                                          ? post['likes'].length
+                                          : 0)
+                                      : 0,
+                              timestamp:
+                                  post['timestamp'] is Timestamp
+                                      ? post['timestamp'] as Timestamp
+                                      : null,
+                              postId: post['id'],
+                              userId: post['userID'] ?? '',
+                              username:
+                                  username, // Pass the correct username here
+                              profilePicUrl:
+                                  profilePicUrl, // Pass the profile picture URL
+                              category: post['category'] ?? 'General', // Pass the category here
+                              onUsernameTap: () {
+                                // Navigate to other profile page when username is tapped
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => OtherProfilePage(
+                                          userId: post['userID'],
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
           ),
         ],
       ),
@@ -396,9 +411,7 @@ class _CommunityForumState extends State<CommunityForum> {
           }
         },
         tooltip: 'Create Post',
-        child: Icon(
-            Icons.add,
-        color: Colors.black,),
+        child: Icon(Icons.add, color: Colors.black),
         backgroundColor: Colors.deepOrange,
       ),
     );
@@ -444,13 +457,11 @@ class CategoryButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
-          categoryName,
-      style: GoogleFonts.lato(
-          textStyle: TextStyle(
-          fontSize: 13,
-        fontWeight: FontWeight.w900,
-      )
-      )),
+        categoryName,
+        style: GoogleFonts.lato(
+          textStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+        ),
+      ),
     );
   }
 }
@@ -465,6 +476,7 @@ class PostCard extends StatefulWidget {
   final String userId;
   final String username; // Receive username as a parameter
   final String profilePicUrl; // Receive profile picture URL as a parameter
+  final String category; // Add category as a parameter
   final VoidCallback onUsernameTap; // Add the callback for username tap
 
   PostCard({
@@ -477,6 +489,7 @@ class PostCard extends StatefulWidget {
     required this.userId,
     required this.username, // Accept username here
     required this.profilePicUrl, // Accept profile picture URL here
+    required this.category, // Accept category here
     required this.onUsernameTap, // Accept the callback in the constructor
   });
 
@@ -619,14 +632,14 @@ class _PostCardState extends State<PostCard> {
   Future<void> _addLike(String postId) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser!.uid)
+              .get();
 
       String username = userDoc['username'] ?? 'Anonymous';
       String profilePic = userDoc['profilePic'] ?? '';
-
 
       await FirebaseFirestore.instance
           .collection('users')
@@ -635,11 +648,11 @@ class _PostCardState extends State<PostCard> {
           .doc(postId)
           .collection('likes')
           .add({
-        'userID': currentUser.uid,
-        'username': username,
-        'profilePic': profilePic,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+            'userID': currentUser.uid,
+            'username': username,
+            'profilePic': profilePic,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
 
       _createNotification(postId, 'like');
     } catch (e) {
@@ -650,10 +663,11 @@ class _PostCardState extends State<PostCard> {
   Future<void> _addComment(String postId, String commentText) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser!.uid)
+              .get();
 
       String username = userDoc['username'] ?? 'Anonymous';
       String profilePic = userDoc['profilePic'] ?? '';
@@ -665,12 +679,12 @@ class _PostCardState extends State<PostCard> {
           .doc(postId)
           .collection('comments')
           .add({
-        'userID': currentUser.uid,
-        'username': username,
-        'profilePic': profilePic,
-        'comment': commentText,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+            'userID': currentUser.uid,
+            'username': username,
+            'profilePic': profilePic,
+            'comment': commentText,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
 
       // 创建评论通知
       _createNotification(postId, 'comment');
@@ -679,15 +693,15 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
-
   // 创建通知
   Future<void> _createNotification(String postId, String type) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser!.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser!.uid)
+              .get();
 
       String username = userDoc['username'] ?? 'Anonymous';
       String profilePic = userDoc['profilePic'] ?? '';
@@ -695,9 +709,9 @@ class _PostCardState extends State<PostCard> {
       await FirebaseFirestore.instance.collection('notifications').add({
         'userId': FirebaseAuth.instance.currentUser!.uid,
         'postId': postId,
-        'type': type,  // like 或 comment
-        'username': username,  // include username
-        'profilePic': profilePic,  // include profilePic
+        'type': type, // like 或 comment
+        'username': username, // include username
+        'profilePic': profilePic, // include profilePic
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false, // default as unread
       });
@@ -767,13 +781,26 @@ class _PostCardState extends State<PostCard> {
         children: [
           ListTile(
             leading: profilePicWidget, // Display profile picture
-            title: Text(
-              widget.username,
-              style: GoogleFonts.montserrat(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ), // Username style
+            title: Row(
+              children: [
+                Text(
+                  widget.username,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ), // Username style
+                ),
+                SizedBox(width: 8), // Add space between username and category
+                Text(
+                  '#${widget.category}',
+                  style: GoogleFonts.comicNeue(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.deepOrange,
+                  ), // Category style
+                ),
+              ],
             ),
             subtitle: Text(
               '${widget.location}',
