@@ -527,21 +527,25 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             Row(
               children: [
-                ElevatedButton(
-                  onPressed: _logOut, // Log out function
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.deepOrange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Tooltip(
+                  message: 'Log out', // Tooltip message
+                  child: ElevatedButton(
+                    onPressed: _logOut, // Log out function
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.deepOrange,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    Icons.exit_to_app,  // Exit icon
+                    child: Icon(
+                      Icons.exit_to_app,  // Exit icon
+                    ),
                   ),
                 ),
               ],
-            ),
+            )
+
           ],
         ),
         backgroundColor: Colors.white,

@@ -127,6 +127,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: FloatingActionButton(
               onPressed: () => _showAddNoteDialog(context),
               backgroundColor: Colors.blue,
+              tooltip: 'Create Notes & Reminders',
               child: Icon(Icons.add, size: 30, color: Colors.white),
             ),
           ),

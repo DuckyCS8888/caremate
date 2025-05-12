@@ -223,37 +223,43 @@ class _CommunityForumState extends State<CommunityForum> {
         backgroundColor: Colors.white,
         actions: [
           // Refresh button
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.black),
-            onPressed: _fetchPosts,
+          Tooltip(
+            message: 'Refresh Post',
+            child: IconButton(
+              icon: Icon(Icons.refresh, color: Colors.black),
+              onPressed: _fetchPosts,
+            ),
           ),
           // Notification button
           // Notification button in AppBar
-          IconButton(
-            icon:
-                _hasUnreadNotifications
-                    ? Stack(
-                      children: [
-                        Icon(Icons.notifications, color: Colors.black),
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
+          Tooltip(
+            message: 'Notifications',
+            child: IconButton(
+              icon:
+                  _hasUnreadNotifications
+                      ? Stack(
+                        children: [
+                          Icon(Icons.notifications, color: Colors.black),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    )
-                    : Icon(Icons.notifications, color: Colors.black),
-            onPressed: () {
-              // Mark notifications as read when the user interacts with the bell (without navigating)
-              _markNotificationsAsRead();
-            },
+                        ],
+                      )
+                      : Icon(Icons.notifications, color: Colors.black),
+              onPressed: () {
+                // Mark notifications as read when the user interacts with the bell (without navigating)
+                _markNotificationsAsRead();
+              },
+            ),
           ),
         ],
       ),
@@ -376,7 +382,9 @@ class _CommunityForumState extends State<CommunityForum> {
                                   username, // Pass the correct username here
                               profilePicUrl:
                                   profilePicUrl, // Pass the profile picture URL
-                              category: post['category'] ?? 'General', // Pass the category here
+                              category:
+                                  post['category'] ??
+                                  'General', // Pass the category here
                               onUsernameTap: () {
                                 // Navigate to other profile page when username is tapped
                                 Navigator.push(
@@ -411,8 +419,8 @@ class _CommunityForumState extends State<CommunityForum> {
           }
         },
         tooltip: 'Create Post',
-        child: Icon(Icons.add, color: Colors.black),
-        backgroundColor: Colors.deepOrange,
+        child: Icon(Icons.add, size: 30, color: Colors.black),
+        backgroundColor: Colors.deepOrangeAccent,
       ),
     );
   }
@@ -686,14 +694,12 @@ class _PostCardState extends State<PostCard> {
             'timestamp': FieldValue.serverTimestamp(),
           });
 
-      // 创建评论通知
       _createNotification(postId, 'comment');
     } catch (e) {
       print("Error adding comment: $e");
     }
   }
 
-  // 创建通知
   Future<void> _createNotification(String postId, String type) async {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
