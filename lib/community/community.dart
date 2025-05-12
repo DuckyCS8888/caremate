@@ -1,9 +1,11 @@
 import 'dart:convert'; // For base64Decode
 import 'dart:typed_data'; // For Uint8List
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:projects/community/otherprofilepage.dart';
 import 'createPost.dart'; // Import your CreatePostPage
 import 'Comment.dart';
 import 'package:intl/intl.dart';
@@ -332,40 +334,51 @@ class _CommunityForumState extends State<CommunityForum> {
                     ? Center(child: Text('No posts available'))
                     : RefreshIndicator(
                       onRefresh: _fetchPosts,
-                      child: ListView.builder(
-                        itemCount: _posts.length,
-                        itemBuilder: (context, index) {
-                          var post = _posts[index];
-                          String username =
-                              _usernames[post['userID']] ??
-                              'Anonymous'; // Get username for each post
-                          String profilePicUrl =
-                              _profilePics[post['userID']] ??
-                              ''; // Get profile picture URL
-                          return PostCard(
+                    child: ListView.builder(
+                      itemCount: _posts.length,
+                      itemBuilder: (context, index) {
+                        var post = _posts[index];
+                        String username = _usernames[post['userID']] ?? 'Anonymous'; // Get username for each post
+                        String profilePicUrl = _profilePics[post['userID']] ?? ''; // Get profile picture URL
+
+                        return GestureDetector(
+                          onTap: () {
+                            // Navigate to other profile page when the user taps on a post
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => OtherProfilePage(userId: post['userID']),
+                              ),
+                            );
+                          },
+                          child: PostCard(
                             location: post['location'] ?? 'Unknown',
                             content: post['content'] ?? '',
                             image: post['image'] ?? '',
-                            likes:
-                                post['likes'] != null
-                                    ? (post['likes'] is List
-                                        ? post['likes'].length
-                                        : 0)
-                                    : 0,
-                            timestamp:
-                                post['timestamp'] is Timestamp
-                                    ? post['timestamp'] as Timestamp
-                                    : null,
+                            likes: post['likes'] != null
+                                ? (post['likes'] is List ? post['likes'].length : 0)
+                                : 0,
+                            timestamp: post['timestamp'] is Timestamp
+                                ? post['timestamp'] as Timestamp
+                                : null,
                             postId: post['id'],
                             userId: post['userID'] ?? '',
-                            username:
-                                username, // Pass the correct username here
-                            profilePicUrl:
-                                profilePicUrl, // Pass the profile picture URL
-                          );
-                        },
-                      ),
-                    ),
+                            username: username, // Pass the correct username here
+                            profilePicUrl: profilePicUrl, // Pass the profile picture URL
+                            onUsernameTap: () {
+                              // Navigate to other profile page when username is tapped
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => OtherProfilePage(userId: post['userID']),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    )
+                ),
           ),
         ],
       ),
@@ -452,6 +465,7 @@ class PostCard extends StatefulWidget {
   final String userId;
   final String username; // Receive username as a parameter
   final String profilePicUrl; // Receive profile picture URL as a parameter
+  final VoidCallback onUsernameTap; // Add the callback for username tap
 
   PostCard({
     required this.location,
@@ -463,6 +477,7 @@ class PostCard extends StatefulWidget {
     required this.userId,
     required this.username, // Accept username here
     required this.profilePicUrl, // Accept profile picture URL here
+    required this.onUsernameTap, // Accept the callback in the constructor
   });
 
   @override
